@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/lk-kotlin-server.iml" filepath="$PROJECT_DIR$/.idea/modules/lk-kotlin-server.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/lk-kotlin-server-base.iml" filepath="$PROJECT_DIR$/.idea/modules/lk-kotlin-server-base.iml" group="lk-kotlin-server-base" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/lk-kotlin-server-base/lk-kotlin-server-base_main.iml" filepath="$PROJECT_DIR$/.idea/modules/lk-kotlin-server-base/lk-kotlin-server-base_main.iml" group="lk-kotlin-server-base" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/lk-kotlin-server-base/lk-kotlin-server-base_test.iml" filepath="$PROJECT_DIR$/.idea/modules/lk-kotlin-server-base/lk-kotlin-server-base_test.iml" group="lk-kotlin-server-base" />
+    </modules>
+  </component>
+</project>

@@ -1,0 +1,3 @@
+rootProject.name = 'lk-kotlin-server'
+include 'lk-kotlin-server-base'
+
