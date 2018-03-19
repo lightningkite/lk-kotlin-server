@@ -1,0 +1,93 @@
+To Do List
+    Retrieve all used types - type exploration
+    Method execution
+    Auto CRUD for Xodus
+    Querying for Xodus?
+    Authentication / Spark Secure
+
+    MongoDB
+    Simplified reflective type for sending metadata over the network
+    Pointers with details
+        Xodus links?
+        Deep query?
+
+
+
+
+
+lk-kotlin
+    lk-kotlin-server-base
+        Transaction
+        Content Types
+    lk-kotlin-server-types
+        SType
+        SClass
+        SInterface
+        SMethod
+        SPointer + Central Resolution
+        SPartial
+        Primitive Types
+        SNullable
+        SAny
+        Collection Types
+        Content type+ conversions
+            Mutable map in each type of Content Type to Lambda
+    lk-kotlin-server-types-security
+        Permissions
+    lk-kotlin-server-json-store
+        JSONStoreSingleton
+        Methods for storage/retrieval/modification
+    lk-kotlin-server-xodus
+        Methods for storage/query/retrieval/modification/creation
+
+Safe file upload (?)
+Authentication - pac4j?
+Password storage
+JWT handling
+Scaling?
+HTTPS
+
+Overall Concepts
+    Setup can be slow, but running should be performant
+    Network calls are objects too, and thus a good log can be stored
+    Security is defined on the network call - library forces user to consider it
+        Annotation to turn off logging a field on a given call
+        Encourage reusing security filters/checks between call security through companion object functions
+    Not necessarily dependent on any one framework
+    Extremely lightweight
+    Easy to set up complicated DB-like functionality
+        Query/Get/Put/Modify/Delete
+            class NoteGetCall(pointer:String) : GetCall<Note>(database, pointer)
+            class NotePostCall(note:Note) : PostCall<Note>(database, note)
+            class NotePutCall(pointer:String, note:Note): PutCall<Note>(database, note)
+        Query supports conditions through Condition type
+        Query supports pagination/sorting
+    Multiple ways of accessing calls
+        JSON RPC is rather simple
+        GET/POST/PUT/PATCH/DELETE on a URL can be attached to a call
+            POST("/rest/notes") -> NotePostClass::class
+
+
+SType
+    Name, description, metatags
+    Default
+    Kotlin type (either a basic or a TypedObject)
+
+SerdesRegistry
+    Map<ContentType, Parser>
+    Map<ContentType, Renderer>
+
+Parser
+    (options, type, data)->typedData
+
+Serializer
+    (options, type, typedData)->data
+
+Security rules are on the calls themselves
+
+Multi-store JWT authorization
+
+No universal DAO?  The query format is the real issue
+
+Reflective classes - useful especially for writing functions?
+    Writing functions needs to be extremely short and easy.  Think lambdas.  Inline magic?
