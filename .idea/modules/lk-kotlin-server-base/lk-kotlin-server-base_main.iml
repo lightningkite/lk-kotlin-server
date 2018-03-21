@@ -39,10 +39,10 @@
     <orderEntry type="library" name="Gradle: org.jetbrains.xodus:xodus-compress:1.0.5" level="project" />
     <orderEntry type="library" name="Gradle: org.jetbrains.xodus:xodus-openAPI:1.0.5" level="project" />
     <orderEntry type="library" name="Gradle: com.sparkjava:spark-core:2.7.1" level="project" />
-    <orderEntry type="library" name="Gradle: lk-kotlin:lk-kotlin-reflect:0.0.4" level="project" />
-    <orderEntry type="library" name="Gradle: lk-kotlin:lk-kotlin-utils:0.0.4" level="project" />
-    <orderEntry type="library" name="Gradle: lk-kotlin:lk-kotlin-jackson:0.0.4" level="project" />
-    <orderEntry type="library" name="Gradle: lk-kotlin:lk-kotlin-okhttp:0.0.4" level="project" />
+    <orderEntry type="library" name="Gradle: lk-kotlin:lk-kotlin-reflect:0.2.0" level="project" />
+    <orderEntry type="library" name="Gradle: lk-kotlin:lk-kotlin-utils:0.2.0" level="project" />
+    <orderEntry type="library" name="Gradle: lk-kotlin:lk-kotlin-jackson:0.2.0" level="project" />
+    <orderEntry type="library" name="Gradle: lk-kotlin:lk-kotlin-okhttp:0.2.0" level="project" />
     <orderEntry type="library" name="Gradle: org.jetbrains.xodus:xodus-utils:1.0.5" level="project" />
     <orderEntry type="library" name="Gradle: io.github.microutils:kotlin-logging:1.4.1" level="project" />
     <orderEntry type="library" name="Gradle: com.fasterxml.jackson.module:jackson-module-kotlin:2.9.4.1" level="project" />

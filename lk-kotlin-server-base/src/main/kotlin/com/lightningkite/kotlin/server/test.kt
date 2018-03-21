@@ -1,13 +1,14 @@
 package com.lightningkite.kotlin.server
 
 import com.lightningkite.kotlin.server.base.*
+import com.lightningkite.kotlin.server.spark.getFunction
+import com.lightningkite.kotlin.server.spark.parseProcessRespond
 import com.lightningkite.kotlin.server.xodus.XodusStorable
 import com.lightningkite.kotlin.server.xodus.read
 import com.lightningkite.kotlin.server.xodus.write
 import com.lightningkite.kotlin.server.xodus.xodus
 import jetbrains.exodus.entitystore.PersistentEntityStores
-import lk.kotlin.jackson.jacksonFromString
-import lk.kotlin.jackson.jacksonToString
+import lk.kotlin.reflect.TypeInformation
 import spark.Service
 import java.util.*
 
@@ -48,19 +49,13 @@ fun main(vararg args: String) {
         context.xodus = PersistentEntityStores.newInstance("./working/xodus")
 
         get("hello") { req, resp -> "Hello World!" }
+        getFunction<HelloWorldFunction>("helloworld", context, { null }, { req, func -> func.name = req.queryParamOrDefault("name", "no-name") })
+
+        val anyCallTypeInfo = TypeInformation(ServerFunction::class)
         post("rpc") { req, resp ->
-            try {
-                Transaction(context).use {
-                    val body = req.body()
-                    val parsed = body.jacksonFromString(ServerFunction::class.java)
-                    val result = parsed.invoke(it)
-                    result.jacksonToString()
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                e.message
-            }
+            req.parseProcessRespond<ServerFunction<*>>(resp, context, { null }, anyCallTypeInfo)
         }
+
         Transaction(context).use {
             GetDataEntries().invoke(it)
         }

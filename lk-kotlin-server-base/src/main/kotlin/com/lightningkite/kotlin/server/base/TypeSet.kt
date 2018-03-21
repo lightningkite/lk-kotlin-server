@@ -6,7 +6,7 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.jvm.jvmErasure
 
-class TypeList {
+class TypeSet {
     val types = HashSet<KClass<*>>()
 
     fun explore(type: KClass<*>) {
