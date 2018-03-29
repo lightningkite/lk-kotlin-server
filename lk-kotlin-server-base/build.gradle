@@ -23,19 +23,21 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.kotlinVersion}"
     testImplementation 'junit:junit:4.12'
     testImplementation "org.jetbrains.kotlin:kotlin-test-junit:${rootProject.kotlinVersion}"
-    implementation "lk-kotlin:lk-kotlin-utils:${rootProject.libraryVersion}"
-    implementation "lk-kotlin:lk-kotlin-jackson:${rootProject.libraryVersion}"
-    implementation "lk-kotlin:lk-kotlin-okhttp:${rootProject.libraryVersion}"
-    implementation "lk-kotlin:lk-kotlin-reflect:${rootProject.libraryVersion}"
+    implementation "com.lightningkite.kotlin:lk-kotlin-utils:${rootProject.libraryVersion}"
+    implementation "com.lightningkite.kotlin:lk-kotlin-jvm-utils:${rootProject.libraryVersion}"
+    implementation "com.lightningkite.kotlin:lk-kotlin-jackson:${rootProject.libraryVersion}"
+    implementation "com.lightningkite.kotlin:lk-kotlin-reflect:${rootProject.libraryVersion}"
 
     compile 'org.jetbrains.xodus:xodus-openAPI:1.0.5'
     compile 'org.jetbrains.xodus:xodus-entity-store:1.0.5'
 
-    compile "com.sparkjava:spark-core:2.7.1"
+    compile group: 'org.mindrot', name: 'jbcrypt', version: '0.3m'
+    compile 'com.auth0:java-jwt:3.2.0'
+
+    compile 'org.eclipse.jetty:jetty-server:9.4.9.v20180320'
 
     implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.9.+'
     implementation "com.fasterxml.jackson.module:jackson-module-kotlin:2.9.+"
-    implementation 'com.squareup.okhttp3:okhttp:3.9.0'
 }
 
 

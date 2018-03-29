@@ -1,6 +1,4 @@
-package com.lightningkite.kotlin.server.base
-
-import spark.Request
+package com.lightningkite.kotlin.server.javax
 
 data class ContentType(
         val type: String,
@@ -31,6 +29,7 @@ data class ContentType(
         val Json = ContentType("application", "json")
         val Bson = ContentType("application", "bson")
         val MessagePack = ContentType("application", "vnd.msgpack")
+        val FormUrlEncoded = ContentType("application", "x-www-form-urlencoded")
     }
 
     object Text {
@@ -45,6 +44,3 @@ data class ContentType(
         val Gif = ContentType("image", "gif")
     }
 }
-
-fun Request.contentTypeObject(): ContentType = ContentType(contentType())
-fun Request.acceptList(): List<ContentType> = headers("accept").split(',').map { ContentType(it) }

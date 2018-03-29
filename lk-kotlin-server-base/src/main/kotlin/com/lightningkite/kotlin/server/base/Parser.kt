@@ -1,8 +1,8 @@
 package com.lightningkite.kotlin.server.base
 
 import lk.kotlin.reflect.TypeInformation
-import java.io.InputStream
+import javax.servlet.http.HttpServletRequest
 
 interface Parser {
-    fun <T> parse(options: Map<String, String>, type: TypeInformation, stream: InputStream): T
+    fun <T> parse(type: TypeInformation, request: HttpServletRequest): T
 }

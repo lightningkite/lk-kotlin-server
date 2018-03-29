@@ -2,9 +2,9 @@
 
 
 buildscript {
-    ext.repositoryGroupName = 'lk-kotlin'
+    ext.repositoryGroupName = 'com.lightningkite.kotlin.server'
     ext.kotlinVersion = '1.2.21'
-    ext.libraryVersion = '0.2.0'
+    ext.libraryVersion = '0.2.2'
     ext.dokkaVersion = '0.9.16'
     repositories {
         google()

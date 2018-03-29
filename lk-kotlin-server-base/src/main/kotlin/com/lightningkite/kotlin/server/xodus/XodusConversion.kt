@@ -22,7 +22,7 @@ fun <T : XodusStorable> StoreTransaction.write(type: KClass<T>, item: T) = write
 fun <T : Any> StoreTransaction.write(type: KClass<T>, item: T, id: String): String {
     return if (id.isEmpty()) {
         //new
-        newEntity(type.qualifiedName!!).apply {
+        newEntity(type.xodusName).apply {
             write(type, item)
         }.toIdString()
     } else {
