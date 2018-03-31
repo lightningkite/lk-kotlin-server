@@ -1,4 +1,4 @@
-package com.lightningkite.kotlin.server.javax
+package com.lightningkite.kotlin.server.base
 
 data class ContentType(
         val type: String,

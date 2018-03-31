@@ -1,4 +1,4 @@
-package com.lightningkite.kotlin.server.base
+package com.lightningkite.kotlin.server.types
 
 import lk.kotlin.reflect.fastFunctions
 import lk.kotlin.reflect.fastProperties

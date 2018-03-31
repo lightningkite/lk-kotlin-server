@@ -2,9 +2,6 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/exit-server/exit-server.iml" filepath="$PROJECT_DIR$/.idea/modules/exit-server/exit-server.iml" group="exit-server" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/exit-server/exit-server_main.iml" filepath="$PROJECT_DIR$/.idea/modules/exit-server/exit-server_main.iml" group="exit-server" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/exit-server/exit-server_test.iml" filepath="$PROJECT_DIR$/.idea/modules/exit-server/exit-server_test.iml" group="exit-server" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/lk-kotlin-server.iml" filepath="$PROJECT_DIR$/.idea/modules/lk-kotlin-server.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/lk-kotlin-server-base.iml" filepath="$PROJECT_DIR$/.idea/modules/lk-kotlin-server-base.iml" group="lk-kotlin-server-base" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/lk-kotlin-server-base/lk-kotlin-server-base_main.iml" filepath="$PROJECT_DIR$/.idea/modules/lk-kotlin-server-base/lk-kotlin-server-base_main.iml" group="lk-kotlin-server-base" />

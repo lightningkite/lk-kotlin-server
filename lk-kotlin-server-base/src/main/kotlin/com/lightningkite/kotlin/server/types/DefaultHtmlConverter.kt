@@ -1,12 +1,16 @@
-package com.lightningkite.kotlin.server.base
+package com.lightningkite.kotlin.server.types
 
+import com.lightningkite.kotlin.server.base.HttpRequest
+import com.lightningkite.kotlin.server.base.ServerSettings
+import com.lightningkite.kotlin.server.base.parameter
+import lk.kotlin.jvm.utils.exception.stackTraceString
 import lk.kotlin.reflect.*
+import java.io.OutputStream
+import java.io.OutputStreamWriter
 import java.text.DateFormat
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 import java.util.*
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.findAnnotation
@@ -14,7 +18,7 @@ import kotlin.reflect.full.findAnnotation
 typealias HtmlFormRenderer<T> = (
         context: DefaultHtmlConverter,
         type: TypeInformation,
-        request: HttpServletRequest,
+        httpRequest: HttpRequest,
         property: KProperty1<*, *>?,
         name: String,
         data: T?,
@@ -25,7 +29,7 @@ typealias HtmlFormRenderer<T> = (
 typealias HtmlSubRenderer<T> = (
         context: DefaultHtmlConverter,
         type: TypeInformation,
-        request: HttpServletRequest,
+        httpRequest: HttpRequest,
         property: KProperty1<*, *>?,
         data: T?,
         to: Appendable
@@ -35,7 +39,7 @@ typealias HtmlSubRenderer<T> = (
 typealias HtmlSubParser<T> = (
         context: DefaultHtmlConverter,
         type: TypeInformation,
-        request: HttpServletRequest,
+        httpRequest: HttpRequest,
         property: KProperty1<*, *>?,
         name: String
 ) -> T?
@@ -49,71 +53,56 @@ class DefaultHtmlConverter : Parser, Renderer {
     val subRenderers = HashMap<KClass<*>, HtmlSubRenderer<*>>()
     val subParserers = HashMap<KClass<*>, HtmlSubParser<*>>()
 
-    private fun findSuitableType(type: KClass<*>, map: Map<KClass<*>, *>): KClass<*> {
-        if (map.containsKey(type)) return type
-        val queue = arrayListOf(type)
-        while (queue.isNotEmpty()) {
-            val next = queue.removeAt(0)
-            if (next == Any::class) continue
-            if (map.containsKey(next)) return next
-            //add all supertypes
-            queue.addAll(next.fastSuperclasses)
-        }
-        return Any::class
-    }
-
-    override fun <T> parse(type: TypeInformation, request: HttpServletRequest): T {
-        println(request.parameterMap)
-        val kclass = findSuitableType(type.kclass, subParserers)
+    override fun <T> parse(type: TypeInformation, httpRequest: HttpRequest): T {
+        val kclass = subParserers.closestKey(type.kclass)
         val parser = subParserers[kclass]!! as HtmlSubParser<T>
-        return parser.invoke(this, type, request, null, "value") as T
+        return parser.invoke(this, type, httpRequest, null, "value") as T
     }
 
-    override fun <T> render(type: TypeInformation, data: T, request: HttpServletRequest, response: HttpServletResponse) {
-        val kclass = findSuitableType(type.kclass, subRenderers)
+    override fun <T> render(type: TypeInformation, data: T, httpRequest: HttpRequest, out: OutputStream) {
+        val kclass = subRenderers.closestKey(type.kclass)
         val renderer = subRenderers[kclass]!! as HtmlSubRenderer<Any?>
-        response.writer.use {
+        OutputStreamWriter(out).use {
             it.append(pageWrapperPrepend)
-            renderer.invoke(this, type, request, null, data, it)
+            renderer.invoke(this, type, httpRequest, null, data, it)
             it.append(pageWrapperAppend)
-            it.flush()
         }
     }
 
     fun <T> subparse(
             type: TypeInformation,
-            request: HttpServletRequest,
+            httpRequest: HttpRequest,
             property: KProperty1<*, *>?,
             field: String
     ): T? {
-        val kclass = findSuitableType(type.kclass, subParserers)
+        val kclass = subParserers.closestKey(type.kclass)
         val parser = subParserers[kclass]!! as HtmlSubParser<T>
-        return parser.invoke(this, type, request, null, field)
+        return parser.invoke(this, type, httpRequest, null, field)
     }
 
     fun <T> subrender(
             type: TypeInformation,
-            request: HttpServletRequest,
+            httpRequest: HttpRequest,
             property: KProperty1<*, *>?,
             data: T?,
             to: Appendable
     ) {
-        val kclass = findSuitableType(type.kclass, subRenderers)
+        val kclass = subRenderers.closestKey(type.kclass)
         val renderer = subRenderers[kclass]!! as HtmlSubRenderer<T>
-        return renderer.invoke(this, type, request, property, data, to)
+        return renderer.invoke(this, type, httpRequest, property, data, to)
     }
 
     fun <T> subrenderForm(
             type: TypeInformation,
-            request: HttpServletRequest,
+            httpRequest: HttpRequest,
             property: KProperty1<*, *>?,
             name: String,
             data: T?,
             to: Appendable
     ) {
-        val kclass = findSuitableType(type.kclass, subFormRenderers)
+        val kclass = subFormRenderers.closestKey(type.kclass)
         val renderer = subFormRenderers[kclass]!! as HtmlFormRenderer<T>
-        return renderer.invoke(this, type, request, property, name, data, to)
+        return renderer.invoke(this, type, httpRequest, property, name, data, to)
     }
 
     //Some defaults
@@ -143,7 +132,7 @@ class DefaultHtmlConverter : Parser, Renderer {
             to.append("""<input type="number" name="$name" value="$data"/>""")
         }
         addParser<Int> { context, type, request, field, name ->
-            request.getParameter(name).toIntOrNull()
+            request.parameter(name)?.toIntOrNull()
         }
 
 
@@ -154,7 +143,7 @@ class DefaultHtmlConverter : Parser, Renderer {
             to.append("""<input type="number" name="$name" value="$data"/>""")
         }
         addParser<Long> { context, type, request, field, name ->
-            request.getParameter(name).toLongOrNull()
+            request.parameter(name)?.toLongOrNull()
         }
 
 
@@ -169,7 +158,7 @@ class DefaultHtmlConverter : Parser, Renderer {
             to.append("""<input type="number" name="$name" step="any" value="$data"/>""")
         }
         addParser<Float> { context, type, request, field, name ->
-            request.getParameter(name).toFloatOrNull()
+            request.parameter(name)?.toFloatOrNull()
         }
 
 
@@ -184,7 +173,7 @@ class DefaultHtmlConverter : Parser, Renderer {
             to.append("""<input type="number" name="$name" step="any" value="$data"/>""")
         }
         addParser<Double> { context, type, request, field, name ->
-            request.getParameter(name).toDoubleOrNull()
+            request.parameter(name)?.toDoubleOrNull()
         }
 
 
@@ -196,7 +185,7 @@ class DefaultHtmlConverter : Parser, Renderer {
             to.append("""<input type="$inputType" name="$name" value="$data"/>""")
         }
         addParser<String> { context, type, request, field, name ->
-            request.getParameter(name)
+            request.parameter(name)
         }
 
 
@@ -209,7 +198,7 @@ class DefaultHtmlConverter : Parser, Renderer {
         }
         addParser<Date> { context, type, request, field, name ->
             val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm")
-            request.getParameter(name)?.let { format.parse(it) }
+            request.parameter(name)?.let { format.parse(it) }
         }
 
 
@@ -239,13 +228,26 @@ class DefaultHtmlConverter : Parser, Renderer {
             }
         }
         addParser<List<*>> { context, type, request, field, name ->
-            val count = request.getParameter(name).toIntOrNull() ?: return@addParser null
+            val count = request.parameter(name)?.toIntOrNull() ?: return@addParser null
             val result = ArrayList<Any?>()
             for (index in 0 until count) {
                 val subname = "$name[$index]"
                 result += subparse<Any?>(type.typeParameters[0], request, field, subname)
             }
             result
+        }
+
+
+        addRenderer<Exception> { context, type, request, field, data, to ->
+            to.append("<h1>${data?.javaClass?.simpleName}</h1>")
+            to.append("<p>")
+            to.append(data?.message)
+            to.append("</p>")
+            if (ServerSettings.debugMode) {
+                to.append("<code>")
+                to.append(data?.stackTraceString())
+                to.append("</code>")
+            }
         }
 
 
@@ -266,11 +268,11 @@ class DefaultHtmlConverter : Parser, Renderer {
                 to.append("<p>null</p>")
             } else {
                 to.append("<dl>")
-                for (field in type.kclass.fastMutableProperties) {
-                    val properName = field.value.friendlyName
+                for (subfield in type.kclass.fastMutableProperties) {
+                    val properName = subfield.value.friendlyName
                     to.append("<dt>$properName</dt>")
                     to.append("<dd>")
-                    context.subrender(field.value.fastType, request, field.value, field.value.reflectAsmGet(data), to)
+                    context.subrender(subfield.value.fastType, request, subfield.value, subfield.value.reflectAsmGet(data), to)
                     to.append("</dd>")
                 }
                 to.append("</dl>")
@@ -280,14 +282,14 @@ class DefaultHtmlConverter : Parser, Renderer {
         addFormRenderer<Any> { context, type, request, field, name, data, to ->
             to.append("""<div class="object">""")
             to.append("""<p class="object-type">${type.kclass.friendlyName}</p>""")
-            for (field in type.kclass.fastMutableProperties) {
-                val properName = field.value.friendlyName
-                val fieldName = name + "." + field.key
+            for (subfield in type.kclass.fastMutableProperties) {
+                val properName = subfield.value.friendlyName
+                val fieldName = name + "." + subfield.key
                 to.append("<p>$properName ")
-                if (field.value.findAnnotation<Meta.DoNotModify>() == null) {
-                    context.subrenderForm(field.value.fastType, request, field.value, fieldName, data?.let { field.value.reflectAsmGet(it) }, to)
+                if (subfield.value.findAnnotation<Meta.DoNotModify>() == null) {
+                    context.subrenderForm(subfield.value.fastType, request, subfield.value, fieldName, data?.let { subfield.value.reflectAsmGet(it) }, to)
                 } else {
-                    context.subrender(field.value.fastType, request, field.value, data?.let { field.value.reflectAsmGet(it) }, to)
+                    context.subrender(subfield.value.fastType, request, subfield.value, data?.let { subfield.value.reflectAsmGet(it) }, to)
                 }
                 to.append("</p>")
             }

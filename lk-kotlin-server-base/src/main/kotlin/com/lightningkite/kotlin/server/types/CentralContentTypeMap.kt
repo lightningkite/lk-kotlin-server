@@ -1,13 +1,12 @@
-package com.lightningkite.kotlin.server.base
+package com.lightningkite.kotlin.server.types
 
-import com.lightningkite.kotlin.server.javax.ContentType
+import com.lightningkite.kotlin.server.base.ContentType
 import java.util.*
 
 object CentralContentTypeMap {
     val parsers = HashMap<String, Parser>()
     val renderers = HashMap<String, Renderer>()
     var defaultRender = ContentType.Application.Json.parameterless()
-    val errorMap = HashMap<Class<*>, (Any) -> HttpError>()
 
     val json = JacksonConverter()
     val text = DefaultTextRenderer()

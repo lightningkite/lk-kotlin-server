@@ -1,5 +1,6 @@
 package com.lightningkite.kotlin.server.javax
 
+import com.lightningkite.kotlin.server.base.ContentType
 import javax.servlet.http.HttpServletRequest
 
 

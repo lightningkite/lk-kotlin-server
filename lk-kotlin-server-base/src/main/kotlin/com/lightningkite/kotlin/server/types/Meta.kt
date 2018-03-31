@@ -1,4 +1,4 @@
-package com.lightningkite.kotlin.server.base
+package com.lightningkite.kotlin.server.types
 
 import java.util.*
 import kotlin.reflect.KClass

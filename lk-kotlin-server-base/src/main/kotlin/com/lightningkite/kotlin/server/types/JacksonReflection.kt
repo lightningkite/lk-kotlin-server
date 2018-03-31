@@ -1,4 +1,4 @@
-package com.lightningkite.kotlin.server.base
+package com.lightningkite.kotlin.server.types
 
 import com.fasterxml.jackson.databind.JavaType
 import lk.kotlin.jackson.MyJackson

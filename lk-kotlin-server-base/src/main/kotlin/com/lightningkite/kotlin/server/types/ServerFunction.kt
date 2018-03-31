@@ -1,6 +1,7 @@
-package com.lightningkite.kotlin.server.base
+package com.lightningkite.kotlin.server.types
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.lightningkite.kotlin.server.base.Transaction
 import lk.kotlin.reflect.TypeInformation
 import lk.kotlin.reflect.fastFunctions
 import kotlin.reflect.KClass

@@ -1,4 +1,4 @@
-package com.lightningkite.kotlin.server.base
+package com.lightningkite.kotlin.server.types
 
 import lk.kotlin.reflect.fastSuperclasses
 import kotlin.reflect.KClass
@@ -18,4 +18,4 @@ fun Collection<KClass<*>>.closest(type: KClass<*>): KClass<*> {
 }
 
 fun Map<KClass<*>, *>.closestKey(type: KClass<*>): KClass<*> = keys.closest(type)
-//fun <T> Map<KClass<*>, T>.closest(type:KClass<*>)
+fun <T> Map<KClass<*>, T>.closest(type: KClass<*>) = get(closestKey(type))

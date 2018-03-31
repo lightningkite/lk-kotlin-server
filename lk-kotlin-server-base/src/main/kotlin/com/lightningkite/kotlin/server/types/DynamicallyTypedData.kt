@@ -1,4 +1,4 @@
-package com.lightningkite.kotlin.server.base
+package com.lightningkite.kotlin.server.types
 
 import lk.kotlin.reflect.TypeInformation
 import lk.kotlin.reflect.typeInformation

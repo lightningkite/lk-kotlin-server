@@ -1,7 +1,7 @@
 package com.lightningkite.kotlin.server.xodus
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.lightningkite.kotlin.server.base.toJavaType
+import com.lightningkite.kotlin.server.types.toJavaType
 import jetbrains.exodus.entitystore.Entity
 import jetbrains.exodus.entitystore.StoreTransaction
 import lk.kotlin.jackson.MyJackson
