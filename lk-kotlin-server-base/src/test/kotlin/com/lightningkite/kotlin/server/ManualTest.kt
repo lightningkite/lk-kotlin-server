@@ -5,16 +5,15 @@ import com.lightningkite.kotlin.server.base.ServerSettings
 import com.lightningkite.kotlin.server.base.Transaction
 import com.lightningkite.kotlin.server.base.respondHtml
 import com.lightningkite.kotlin.server.jetty.asJettyHandler
-import com.lightningkite.kotlin.server.types.Meta
-import com.lightningkite.kotlin.server.types.ServerFunction
-import com.lightningkite.kotlin.server.types.TypedExceptionHttpRequestHandler
-import com.lightningkite.kotlin.server.types.rpc
-import com.lightningkite.kotlin.server.xodus.XodusStorable
-import com.lightningkite.kotlin.server.xodus.read
-import com.lightningkite.kotlin.server.xodus.write
-import com.lightningkite.kotlin.server.xodus.xodus
+import com.lightningkite.kotlin.server.types.*
+import com.lightningkite.kotlin.server.types.annotations.GetFromID
+import com.lightningkite.kotlin.server.types.annotations.Query
+import com.lightningkite.kotlin.server.xodus.*
 import jetbrains.exodus.entitystore.PersistentEntityStores
 import lk.kotlin.reflect.TypeInformation
+import lk.kotlin.reflect.annotations.DoNotModify
+import lk.kotlin.reflect.annotations.EstimatedLength
+import lk.kotlin.reflect.annotations.UniqueIdentifier
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.HandlerCollection
 import org.eclipse.jetty.server.handler.ResourceHandler
@@ -23,11 +22,37 @@ import java.util.*
 
 class ManualTest {
     //Data Model
-    data class DataEntry(
-            @Meta.DoNotModify override var id: String = "",
-            var data: String = "",
-            var timestamp: Date = Date()
-    ) : XodusStorable
+
+    @GetFromID(GetUser::class)
+    @Query(GetUsers::class)
+    data class User(
+            @UniqueIdentifier @DoNotModify override var id: String = "",
+            var name: String = "",
+            @EstimatedLength(5000) var bio: String = "",
+            var created: Date = Date(),
+            var role: Role = Role.Admin
+    ) : XodusStorable {
+
+        enum class Role { Admin, Poster, Other }
+
+        override fun toString(): String {
+            return name
+        }
+    }
+
+    @GetFromID(GetPost::class)
+    @Query(GetPosts::class)
+    data class Post(
+            @UniqueIdentifier @DoNotModify override var id: String = "",
+            var postedBy: Pointer<User, String> = Pointer(),
+            var title: String = "",
+            @EstimatedLength(5000) var content: String = "",
+            var created: Date = Date()
+    ) : XodusStorable {
+        override fun toString(): String {
+            return title
+        }
+    }
 
     //Functionality
     class HelloWorldFunction(
@@ -36,18 +61,46 @@ class ManualTest {
         override fun invoke(transaction: Transaction): String = "Hello, $name!"
     }
 
-    class AddDataEntry(
-            var entry: DataEntry = DataEntry()
-    ) : ServerFunction<String> {
-        override fun invoke(transaction: Transaction): String = transaction.xodus.write(entry)
+    data class AddUser(
+            var user: User = User()
+    ) : ServerFunction<User> {
+        override fun invoke(transaction: Transaction): User = transaction.xodus.write(user).let { user }
     }
 
-    class GetDataEntries : ServerFunction<List<DataEntry>> {
-        override fun invoke(transaction: Transaction): List<DataEntry> {
-            return transaction.xodus.getAll(DataEntry::class.qualifiedName!!)
+    data class AddPost(
+            var post: Post = Post()
+    ) : ServerFunction<Post> {
+        override fun invoke(transaction: Transaction): Post = transaction.xodus.write(post).let { post }
+    }
+
+    data class GetUser(
+            var id: String = ""
+    ) : ServerFunction<User> {
+        override fun invoke(transaction: Transaction): User = transaction.xodus.get<User>(id)
+    }
+
+    data class GetPost(
+            var id: String = ""
+    ) : ServerFunction<Post> {
+        override fun invoke(transaction: Transaction): Post = transaction.xodus.get<Post>(id)
+    }
+
+    class GetUsers : ServerFunction<List<User>> {
+        override fun invoke(transaction: Transaction): List<User> {
+            return transaction.xodus.getAll<User>()
                     .asSequence()
                     .take(100)
-                    .map { it.read<DataEntry>() }
+                    .map { it.read<User>() }
+                    .toList()
+        }
+    }
+
+    class GetPosts : ServerFunction<List<Post>> {
+        override fun invoke(transaction: Transaction): List<Post> {
+            return transaction.xodus.getAll<Post>()
+                    .asSequence()
+                    .take(100)
+                    .map { it.read<Post>() }
                     .toList()
         }
     }
@@ -69,12 +122,20 @@ class ManualTest {
                         get("") {
                             respondHtml(html = "Hello!")
                         }
-                        rpc("rpc", context, listOf(
-                                HelloWorldFunction::class,
-                                AddDataEntry::class,
-                                GetDataEntries::class,
-                                BrokenFunction::class
-                        ).map { TypeInformation(it) })
+                        rpc(
+                                url = "rpc",
+                                context = context,
+                                getUser = { null },
+                                logger = SimpleServerFunctionLogger(),
+                                functionList = listOf(
+                                        HelloWorldFunction::class,
+                                        AddUser::class,
+                                        AddPost::class,
+                                        GetUsers::class,
+                                        GetPosts::class,
+                                        BrokenFunction::class
+                                ).map { TypeInformation(it) }
+                        )
                     }.asJettyHandler(),
                     ResourceHandler().apply {
                         isDirectoriesListed = true

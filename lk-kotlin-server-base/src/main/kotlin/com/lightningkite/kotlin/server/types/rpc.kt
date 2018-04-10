@@ -2,36 +2,49 @@ package com.lightningkite.kotlin.server.types
 
 import com.lightningkite.kotlin.server.base.*
 import lk.kotlin.reflect.TypeInformation
+import lk.kotlin.reflect.annotations.friendlyName
 import lk.kotlin.reflect.fastMutableProperties
-import lk.kotlin.reflect.reflectAsmConstruct
 import kotlin.reflect.KClass
+import kotlin.reflect.full.createInstance
 
-fun HttpRequestHandlerBuilder.rpc(url: String, context: Context, functionList: List<TypeInformation>) {
+fun KClass<*>.urlName() = friendlyName.toLowerCase().replace(' ', '-')
+
+fun HttpRequestHandlerBuilder.rpc(
+        url: String,
+        context: Context,
+        getUser: (HttpRequest) -> Any? = { null },
+        logger: ServerFunctionLogger? = null,
+        functionList: List<TypeInformation>
+) {
     for (functionType in functionList) {
-        val funcUrl = url + "/" + functionType.kclass.urlName
+        val funcUrl = url + "/" + functionType.kclass.urlName()
         println("funcUrl $funcUrl")
 
         if (functionType.kclass.fastMutableProperties.isEmpty()) {
             get(funcUrl) {
-                val request = functionType.kclass.reflectAsmConstruct() as ServerFunction<*>
-                val result = Transaction(context).use {
+                val user = getUser(this)
+                val request = functionType.kclass.createInstance() as ServerFunction<*>
+                val result = Transaction(context, user).use {
                     request.invoke(it)
                 }
+                logger?.log(HistoricalServerFunction(userIdentifier = user, call = request, result = result))
                 @Suppress("UNCHECKED_CAST")
-                respondWith(typeInformation = (functionType.kclass as KClass<out ServerFunction<*>>).returnType, output = result)
+                respondWith(context = context, user = user, typeInformation = request.returnType, output = result)
             }
         } else {
             get(funcUrl) {
-                respondWith(typeInformation = functionType, output = functionType.kclass.reflectAsmConstruct())
+                respondWith(context = context, user = null, typeInformation = functionType, output = functionType.kclass.createInstance())
             }
         }
         post(funcUrl) {
-            val request = inputAs<ServerFunction<*>>(functionType)
-            val result = Transaction(context).use {
+            val user = getUser(this)
+            val request = inputAs<ServerFunction<*>>(context = context, user = user, typeInformation = functionType)
+            val result = Transaction(context, user).use {
                 request.invoke(it)
             }
+            logger?.log(HistoricalServerFunction(userIdentifier = user, call = request, result = result))
             @Suppress("UNCHECKED_CAST")
-            respondWith(typeInformation = (functionType.kclass as KClass<out ServerFunction<*>>).returnType, output = result)
+            respondWith(context = context, user = user, typeInformation = request.returnType, output = result)
         }
     }
     get("$url/index") {
@@ -44,9 +57,10 @@ fun HttpRequestHandlerBuilder.rpc(url: String, context: Context, functionList: L
             append("</head>")
             append("<body>")
             append("<h1>Available Functions</h1>")
+            append("<p>You are logged in as: ${getUser(this@get)}</p>")
             append("<ul>")
             for (it in functionList) {
-                append("<li><a href=\"${it.kclass.urlName}\">${it.kclass.friendlyName}</a></li>")
+                append("<li><a href=\"${it.kclass.urlName()}\">${it.kclass.friendlyName}</a></li>")
             }
             append("</ul>")
             append("</body>")
@@ -54,10 +68,12 @@ fun HttpRequestHandlerBuilder.rpc(url: String, context: Context, functionList: L
         }
     }
     post(url) {
-        val request = inputAs<ServerFunction<*>>()
-        val result = Transaction(context).use {
+        val user = getUser(this)
+        val request = inputAs<ServerFunction<*>>(context = context, user = user)
+        val result = Transaction(context, user).use {
             request.invoke(it)
         }
-        respondWith(typeInformation = request.javaClass.kotlin.returnType, output = result)
+        logger?.log(HistoricalServerFunction(userIdentifier = user, call = request, result = result))
+        respondWith(context = context, user = user, typeInformation = request.returnType, output = result)
     }
 }

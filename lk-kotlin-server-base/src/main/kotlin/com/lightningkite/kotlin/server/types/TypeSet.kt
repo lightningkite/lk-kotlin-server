@@ -1,7 +1,7 @@
 package com.lightningkite.kotlin.server.types
 
 import lk.kotlin.reflect.fastFunctions
-import lk.kotlin.reflect.fastProperties
+import lk.kotlin.reflect.fastMutableProperties
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.jvm.jvmErasure
@@ -11,7 +11,7 @@ class TypeSet {
 
     fun explore(type: KClass<*>) {
         if (!types.add(type)) return
-        for (prop in type.fastProperties) {
+        for (prop in type.fastMutableProperties) {
             explore(prop.value.returnType)
         }
         for (func in type.fastFunctions) {
@@ -32,3 +32,4 @@ class TypeSet {
         }
     }
 }
+

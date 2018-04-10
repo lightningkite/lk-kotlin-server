@@ -7,6 +7,7 @@ fun HttpRequest.parameters(key: String): List<String> = parameters[key.toLowerCa
 fun HttpRequest.headers(key: String): List<String> = headers[key.toLowerCase()] ?: listOf()
 fun HttpRequest.parameter(key: String): String? = parameters[key.toLowerCase()]?.firstOrNull()
 fun HttpRequest.header(key: String): String? = headers[key.toLowerCase()]?.firstOrNull()
+fun HttpRequest.cookie(key: String): HttpCookie? = cookies[key.toLowerCase()]
 
 fun HttpRequest.accepts(): List<ContentType> =
         headers("Accept").asSequence().flatMap { it.split(',').asSequence().map { ContentType(it) } }.toList()

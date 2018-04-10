@@ -1,28 +1,30 @@
 package com.lightningkite.kotlin.server.types
 
-import com.lightningkite.kotlin.server.base.HttpCookie
-import com.lightningkite.kotlin.server.base.HttpRequest
-import com.lightningkite.kotlin.server.base.accepts
-import com.lightningkite.kotlin.server.base.contentType
+import com.lightningkite.kotlin.server.base.*
 import lk.kotlin.reflect.TypeInformation
 import lk.kotlin.reflect.typeInformation
 
-inline fun <reified T : Any> HttpRequest.inputAs(): T = inputAs(typeInformation<T>())
-fun <T> HttpRequest.inputAs(typeInformation: TypeInformation): T {
+inline fun <reified T : Any> HttpRequest.inputAs(context: Context = mutableMapOf(), user: Any? = null): T = inputAs(context, user, typeInformation<T>())
+fun <T> HttpRequest.inputAs(context: Context = mutableMapOf(), user: Any? = null, typeInformation: TypeInformation): T {
     val parser = CentralContentTypeMap.parsers[contentType()?.parameterless()]
             ?: throw IllegalArgumentException("Content type ${contentType()} not understood.")
     return parser.parse(
             type = typeInformation,
-            httpRequest = this
+            httpRequest = this,
+            getTransaction = { Transaction(context, user) }
     )
 }
 
 inline fun <reified T : Any> HttpRequest.respondWith(
+        context: Context = mutableMapOf(),
+        user: Any? = null,
         code: Int = 200,
         headers: Map<String, List<String>> = mapOf(),
         addCookies: List<HttpCookie> = listOf(),
         output: T
 ) = respondWith(
+        context = context,
+        user = user,
         code = code,
         headers = headers,
         addCookies = addCookies,
@@ -31,6 +33,8 @@ inline fun <reified T : Any> HttpRequest.respondWith(
 )
 
 fun <T> HttpRequest.respondWith(
+        context: Context = mutableMapOf(),
+        user: Any? = null,
         code: Int = 200,
         headers: Map<String, List<String>> = mapOf(),
         addCookies: List<HttpCookie> = listOf(),
@@ -50,7 +54,8 @@ fun <T> HttpRequest.respondWith(
                         type = typeInformation,
                         data = output,
                         httpRequest = this,
-                        out = it
+                        out = it,
+                        getTransaction = { Transaction(context, user) }
                 )
             }
     )

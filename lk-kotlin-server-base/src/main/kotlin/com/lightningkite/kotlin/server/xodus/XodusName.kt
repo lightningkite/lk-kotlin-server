@@ -1,5 +1,6 @@
 package com.lightningkite.kotlin.server.xodus
 
+import lk.kotlin.reflect.annotations.externalName
 import kotlin.reflect.KClass
 import kotlin.reflect.full.findAnnotation
 
@@ -10,4 +11,4 @@ import kotlin.reflect.full.findAnnotation
 annotation class XodusName(val name: String)
 
 val KClass<*>.xodusName
-    get() = findAnnotation<XodusName>()?.name ?: qualifiedName ?: toString()
+    get() = findAnnotation<XodusName>()?.name ?: externalName

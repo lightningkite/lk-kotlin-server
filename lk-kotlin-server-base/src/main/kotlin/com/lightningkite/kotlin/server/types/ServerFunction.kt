@@ -8,6 +8,7 @@ import kotlin.reflect.KClass
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
 interface ServerFunction<T> {
+    val returnType: TypeInformation get() = javaClass.kotlin.returnType
     fun invoke(transaction: Transaction): T
 }
 

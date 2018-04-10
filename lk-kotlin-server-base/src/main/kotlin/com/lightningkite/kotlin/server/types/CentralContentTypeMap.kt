@@ -9,14 +9,11 @@ object CentralContentTypeMap {
     var defaultRender = ContentType.Application.Json.parameterless()
 
     val json = JacksonConverter()
-    val text = DefaultTextRenderer()
-    val html = DefaultHtmlConverter()
+    val html = HtmlConverter()
 
     init {
         parsers[ContentType.Application.Json.parameterless()] = json
         renderers[ContentType.Application.Json.parameterless()] = json
-
-        renderers[ContentType.Text.Plain.parameterless()] = text
 
         parsers[ContentType.Application.FormUrlEncoded.parameterless()] = html
         parsers[ContentType.Multipart.parameterless()] = html

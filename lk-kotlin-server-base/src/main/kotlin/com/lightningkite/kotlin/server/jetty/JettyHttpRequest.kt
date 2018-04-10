@@ -25,7 +25,7 @@ class JettyHttpRequest(
     override val headers: Map<String, List<String>> = request.headerNames.asSequence().associate { it.toLowerCase() to request.getHeaders(it).toList() }
     override val parameters: Map<String, List<String>> = request.parameterNames.asSequence().associate { it.toLowerCase() to request.getParameterValues(it).toList() }
     override val cookies: Map<String, HttpCookie> by lazy {
-        request.cookies.associate {
+        request.cookies?.associate {
             it.name.toLowerCase() to HttpCookie(
                     name = it.name,
                     value = it.value,
@@ -37,7 +37,7 @@ class JettyHttpRequest(
                     version = it.version,
                     isHttpOnly = it.isHttpOnly
             )
-        }
+        } ?: mapOf()
     }
     override val input: InputStream = request.inputStream
 
