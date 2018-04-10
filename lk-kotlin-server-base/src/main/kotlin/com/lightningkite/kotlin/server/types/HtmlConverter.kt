@@ -10,6 +10,7 @@ import lk.kotlin.jvm.utils.exception.stackTraceString
 import lk.kotlin.reflect.*
 import lk.kotlin.reflect.annotations.estimatedLength
 import lk.kotlin.reflect.annotations.friendlyName
+import lk.kotlin.reflect.annotations.hidden
 import lk.kotlin.reflect.annotations.password
 import java.io.OutputStream
 import java.io.OutputStreamWriter
@@ -49,6 +50,30 @@ class HtmlConverter : Parser, Renderer {
         fun renderForm(info: LevelInfo<T>, to: Appendable)
         fun parse(info: LevelInfo<T>): T?
         fun renderParameters(info: LevelInfo<T>, to: MutableMap<String, String>)
+        fun renderSafe(info: LevelInfo<T>, to: Appendable) = try {
+            render(info, to)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        fun renderFormSafe(info: LevelInfo<T>, to: Appendable) = try {
+            renderForm(info, to)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        fun parseSafe(info: LevelInfo<T>): T? = try {
+            parse(info)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+
+        fun renderParametersSafe(info: LevelInfo<T>, to: MutableMap<String, String>) = try {
+            renderParameters(info, to)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     private val subGenerators = ArrayList<(KClass<*>) -> HtmlSubConverter<*>?>()
@@ -69,7 +94,7 @@ class HtmlConverter : Parser, Renderer {
     override fun <T> parse(type: TypeInformation, httpRequest: HttpRequest, getTransaction: () -> Transaction): T {
         val context = Context(this, httpRequest, getTransaction)
         val info = LevelInfo(context, 0, 0, type, null, "value", null)
-        return retrieve(type.kclass).parse(info) as T
+        return retrieve(type.kclass).parseSafe(info) as T
     }
 
     override fun <T> render(type: TypeInformation, data: T, httpRequest: HttpRequest, getTransaction: () -> Transaction, out: OutputStream) {
@@ -78,7 +103,7 @@ class HtmlConverter : Parser, Renderer {
         val info = LevelInfo(context, 0, 0, type, null, "value", data)
         OutputStreamWriter(out).use {
             it.append(pageWrapperPrepend)
-            renderer.render(info, it)
+            renderer.renderSafe(info, it)
             it.append(pageWrapperAppend)
         }
     }
@@ -275,7 +300,7 @@ class HtmlConverter : Parser, Renderer {
                                 name = "${info.name}[$index]",
                                 data = item
                         )
-                        info.context.htmlConverter.retrieveAny(info.type.typeParameters[0].kclass).render(sub, to)
+                        info.context.htmlConverter.retrieveAny(info.type.typeParameters[0].kclass).renderSafe(sub, to)
                         to.append("</li>")
                     }
                     to.append("</ul>")
@@ -298,7 +323,7 @@ class HtmlConverter : Parser, Renderer {
                                 name = "${info.name}[$index]",
                                 data = item
                         )
-                        info.context.htmlConverter.retrieveAny(info.type.typeParameters[0].kclass).renderForm(sub, to)
+                        info.context.htmlConverter.retrieveAny(info.type.typeParameters[0].kclass).renderFormSafe(sub, to)
                         to.append("</li>")
                     }
                     to.append("</ul>")
@@ -318,7 +343,7 @@ class HtmlConverter : Parser, Renderer {
                             name = "${info.name}[$index]",
                             data = null
                     )
-                    result += info.context.htmlConverter.retrieveAny(info.type.typeParameters[0].kclass).parse(sub)
+                    result += info.context.htmlConverter.retrieveAny(info.type.typeParameters[0].kclass).parseSafe(sub)
                 }
                 return result
             }
@@ -335,7 +360,7 @@ class HtmlConverter : Parser, Renderer {
                                 name = "${info.name}[$index]",
                                 data = null
                         )
-                        info.context.htmlConverter.retrieveAny(info.type.typeParameters[0].kclass).renderParameters(sub, to)
+                        info.context.htmlConverter.retrieveAny(info.type.typeParameters[0].kclass).renderParametersSafe(sub, to)
                     }
                 }
             }
@@ -361,7 +386,7 @@ class HtmlConverter : Parser, Renderer {
                                     name = "${info.name}[$index]",
                                     data = item
                             )
-                            info.context.htmlConverter.retrieveAny(info.type.typeParameters[0].kclass).render(sub, to)
+                            info.context.htmlConverter.retrieveAny(info.type.typeParameters[0].kclass).renderSafe(sub, to)
                             to.append("</li>")
                         }
                         to.append("</ul>")
@@ -384,7 +409,7 @@ class HtmlConverter : Parser, Renderer {
                                     name = "${info.name}[$index]",
                                     data = item
                             )
-                            info.context.htmlConverter.retrieveAny(info.type.typeParameters[0].kclass).renderForm(sub, to)
+                            info.context.htmlConverter.retrieveAny(info.type.typeParameters[0].kclass).renderFormSafe(sub, to)
                             to.append("</li>")
                         }
                         to.append("</ul>")
@@ -404,7 +429,7 @@ class HtmlConverter : Parser, Renderer {
                                 name = "${info.name}[$index]",
                                 data = null
                         )
-                        result += info.context.htmlConverter.retrieveAny(info.type.typeParameters[0].kclass).parse(sub)
+                        result += info.context.htmlConverter.retrieveAny(info.type.typeParameters[0].kclass).parseSafe(sub)
                     }
                     return result
                 }
@@ -421,7 +446,7 @@ class HtmlConverter : Parser, Renderer {
                                     name = "${info.name}[$index]",
                                     data = null
                             )
-                            info.context.htmlConverter.retrieveAny(info.type.typeParameters[0].kclass).renderParameters(sub, to)
+                            info.context.htmlConverter.retrieveAny(info.type.typeParameters[0].kclass).renderParametersSafe(sub, to)
                         }
                     }
                 }
@@ -444,7 +469,7 @@ class HtmlConverter : Parser, Renderer {
                                 name = "${info.name}[$index].key",
                                 data = key
                         )
-                        info.context.htmlConverter.retrieveAny(info.type.typeParameters[0].kclass).render(subKey, to)
+                        info.context.htmlConverter.retrieveAny(info.type.typeParameters[0].kclass).renderSafe(subKey, to)
                         to.append("</dt>")
                         to.append("<dd>")
                         val subValue = LevelInfo(
@@ -456,7 +481,7 @@ class HtmlConverter : Parser, Renderer {
                                 name = "${info.name}[$index].value",
                                 data = value
                         )
-                        info.context.htmlConverter.retrieveAny(info.type.typeParameters[1].kclass).render(subValue, to)
+                        info.context.htmlConverter.retrieveAny(info.type.typeParameters[1].kclass).renderSafe(subValue, to)
                         to.append("</dd>")
                     }
                     to.append("</dl>")
@@ -479,7 +504,7 @@ class HtmlConverter : Parser, Renderer {
                                 name = "${info.name}[$index].key",
                                 data = key
                         )
-                        info.context.htmlConverter.retrieveAny(info.type.typeParameters[0].kclass).renderForm(subKey, to)
+                        info.context.htmlConverter.retrieveAny(info.type.typeParameters[0].kclass).renderFormSafe(subKey, to)
                         to.append("</dt>")
                         to.append("<dd>")
                         val subValue = LevelInfo(
@@ -491,7 +516,7 @@ class HtmlConverter : Parser, Renderer {
                                 name = "${info.name}[$index].value",
                                 data = value
                         )
-                        info.context.htmlConverter.retrieveAny(info.type.typeParameters[1].kclass).renderForm(subValue, to)
+                        info.context.htmlConverter.retrieveAny(info.type.typeParameters[1].kclass).renderFormSafe(subValue, to)
                         to.append("</dd>")
                     }
                     to.append("</dl>")
@@ -521,8 +546,8 @@ class HtmlConverter : Parser, Renderer {
                             data = null
                     )
                     result.put(
-                            info.context.htmlConverter.retrieveAny(info.type.typeParameters[0].kclass).parse(subKey),
-                            info.context.htmlConverter.retrieveAny(info.type.typeParameters[1].kclass).parse(subValue)
+                            info.context.htmlConverter.retrieveAny(info.type.typeParameters[0].kclass).parseSafe(subKey),
+                            info.context.htmlConverter.retrieveAny(info.type.typeParameters[1].kclass).parseSafe(subValue)
                     )
                 }
                 return result
@@ -540,7 +565,7 @@ class HtmlConverter : Parser, Renderer {
                                 name = "${info.name}[$index].key",
                                 data = key
                         )
-                        info.context.htmlConverter.retrieveAny(info.type.typeParameters[0].kclass).renderParameters(subKey, to)
+                        info.context.htmlConverter.retrieveAny(info.type.typeParameters[0].kclass).renderParametersSafe(subKey, to)
 
                         val subValue = LevelInfo(
                                 context = info.context,
@@ -551,7 +576,7 @@ class HtmlConverter : Parser, Renderer {
                                 name = "${info.name}[$index].value",
                                 data = value
                         )
-                        info.context.htmlConverter.retrieveAny(info.type.typeParameters[1].kclass).renderParameters(subValue, to)
+                        info.context.htmlConverter.retrieveAny(info.type.typeParameters[1].kclass).renderParametersSafe(subValue, to)
                     }
                 }
             }
@@ -579,7 +604,7 @@ class HtmlConverter : Parser, Renderer {
                                     data = value
                             )
                             info.context.htmlConverter.retrieveAny(info.type.typeParameters.first().kclass)
-                                    .render(sub, to)
+                                    .renderSafe(sub, to)
                         }
                         depth == max -> {
                             //Todo: Convert to link
@@ -595,7 +620,7 @@ class HtmlConverter : Parser, Renderer {
                             )
                             val params = HashMap<String, String>()
                             info.context.htmlConverter.retrieveAny(linkTo.javaClass.kotlin)
-                                    .renderParameters(sub, params)
+                                    .renderParametersSafe(sub, params)
                             val paramString = paramsToQueryString(params)
                             to.append("""<a href="${linkTo.javaClass.kotlin.urlName() + paramString}">""")
                             to.append("</a>")
@@ -613,7 +638,7 @@ class HtmlConverter : Parser, Renderer {
                             )
                             to.append("Key: ")
                             info.context.htmlConverter.retrieveAny(info.type.typeParameters[1].kclass)
-                                    .render(sub, to)
+                                    .renderSafe(sub, to)
                         }
                     }
                 }
@@ -709,7 +734,13 @@ class HtmlConverter : Parser, Renderer {
             //Any!
             return@sub object : HtmlSubConverter<Any> {
 
-                val subProperties = kclass.fastMutableProperties.values.map {
+                val subPropertiesHidden = kclass.fastMutableProperties.values.filter { it.hidden }.map {
+                    SubField(
+                            property = it as KMutableProperty1<Any, Any?>,
+                            subConverter = this@HtmlConverter.retrieveAny(it.fastType.kclass)
+                    )
+                }.toTypedArray()
+                val subProperties = kclass.fastMutableProperties.values.filter { !it.hidden }.map {
                     SubField(
                             property = it as KMutableProperty1<Any, Any?>,
                             subConverter = this@HtmlConverter.retrieveAny(it.fastType.kclass)
@@ -743,7 +774,7 @@ class HtmlConverter : Parser, Renderer {
                                     name = info.name + "." + prop.name,
                                     data = prop.property.get(info.data!!)
                             )
-                            prop.subConverter.render(subInfo, to)
+                            prop.subConverter.renderSafe(subInfo, to)
                             to.append("</dd>")
                         }
                         to.append("</dl>")
@@ -757,6 +788,22 @@ class HtmlConverter : Parser, Renderer {
                     if (info.data == null) {
                         to.append("<p>null</p>")
                     } else {
+                        for (prop in subPropertiesHidden) {
+                            val subInfo = LevelInfo(
+                                    context = info.context,
+                                    depth = info.depth + 1,
+                                    callDepth = info.callDepth,
+                                    type = prop.type,
+                                    property = prop.property,
+                                    name = info.name + "." + prop.name,
+                                    data = prop.property.get(info.data!!)
+                            )
+                            val toMap = HashMap<String, String>()
+                            prop.subConverter.renderParametersSafe(subInfo, toMap)
+                            for ((key, value) in toMap) {
+                                to.append("""<input name="$key" type="hidden" value="$value"/>""")
+                            }
+                        }
                         to.append("<dl>")
                         for (prop in subProperties) {
                             val properName = prop.property.friendlyName
@@ -771,7 +818,7 @@ class HtmlConverter : Parser, Renderer {
                                     name = info.name + "." + prop.name,
                                     data = prop.property.get(info.data!!)
                             )
-                            prop.subConverter.renderForm(subInfo, to)
+                            prop.subConverter.renderFormSafe(subInfo, to)
                             to.append("</dd>")
                         }
                         to.append("</dl>")
@@ -792,7 +839,24 @@ class HtmlConverter : Parser, Renderer {
                                     name = info.name + "." + prop.name,
                                     data = null
                             )
-                            val value = prop.subConverter.parse(subInfo)
+                            val value = prop.subConverter.parseSafe(subInfo)
+                            prop.property.setUntyped(instance, value)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
+                    for (prop in subPropertiesHidden) {
+                        try {
+                            val subInfo = LevelInfo(
+                                    context = info.context,
+                                    depth = info.depth + 1,
+                                    callDepth = info.callDepth,
+                                    type = prop.type,
+                                    property = prop.property,
+                                    name = info.name + "." + prop.name,
+                                    data = null
+                            )
+                            val value = prop.subConverter.parseSafe(subInfo)
                             prop.property.setUntyped(instance, value)
                         } catch (e: Exception) {
                             e.printStackTrace()
@@ -814,7 +878,20 @@ class HtmlConverter : Parser, Renderer {
                                 name = info.name + "." + prop.name,
                                 data = value
                         )
-                        prop.subConverter.renderParameters(subInfo, to)
+                        prop.subConverter.renderParametersSafe(subInfo, to)
+                    }
+                    for (prop in subPropertiesHidden) {
+                        val value = prop.property.get(info.data)
+                        val subInfo = LevelInfo(
+                                context = info.context,
+                                depth = info.depth + 1,
+                                callDepth = info.callDepth,
+                                type = prop.type,
+                                property = prop.property,
+                                name = info.name + "." + prop.name,
+                                data = value
+                        )
+                        prop.subConverter.renderParametersSafe(subInfo, to)
                     }
                 }
 

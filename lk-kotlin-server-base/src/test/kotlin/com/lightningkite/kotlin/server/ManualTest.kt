@@ -7,12 +7,13 @@ import com.lightningkite.kotlin.server.base.respondHtml
 import com.lightningkite.kotlin.server.jetty.asJettyHandler
 import com.lightningkite.kotlin.server.types.*
 import com.lightningkite.kotlin.server.types.annotations.GetFromID
+import com.lightningkite.kotlin.server.types.annotations.PrimaryKey
 import com.lightningkite.kotlin.server.types.annotations.Query
 import com.lightningkite.kotlin.server.xodus.*
 import jetbrains.exodus.entitystore.PersistentEntityStores
 import lk.kotlin.reflect.TypeInformation
-import lk.kotlin.reflect.annotations.DoNotModify
 import lk.kotlin.reflect.annotations.EstimatedLength
+import lk.kotlin.reflect.annotations.Hidden
 import lk.kotlin.reflect.annotations.UniqueIdentifier
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.HandlerCollection
@@ -26,7 +27,7 @@ class ManualTest {
     @GetFromID(GetUser::class)
     @Query(GetUsers::class)
     data class User(
-            @UniqueIdentifier @DoNotModify override var id: String = "",
+            @PrimaryKey @Hidden override var id: String = "",
             var name: String = "",
             @EstimatedLength(5000) var bio: String = "",
             var created: Date = Date(),
@@ -43,7 +44,7 @@ class ManualTest {
     @GetFromID(GetPost::class)
     @Query(GetPosts::class)
     data class Post(
-            @UniqueIdentifier @DoNotModify override var id: String = "",
+            @UniqueIdentifier @Hidden override var id: String = "",
             var postedBy: Pointer<User, String> = Pointer(),
             var title: String = "",
             @EstimatedLength(5000) var content: String = "",
