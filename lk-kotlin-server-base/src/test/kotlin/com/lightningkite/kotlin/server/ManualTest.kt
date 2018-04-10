@@ -31,7 +31,7 @@ class ManualTest {
             var name: String = "",
             @EstimatedLength(5000) var bio: String = "",
             var created: Date = Date(),
-            var role: Role = Role.Admin
+            var role: Role = Role.Other
     ) : XodusStorable {
 
         enum class Role { Admin, Poster, Other }
@@ -132,6 +132,8 @@ class ManualTest {
                                         HelloWorldFunction::class,
                                         AddUser::class,
                                         AddPost::class,
+                                        GetUser::class,
+                                        GetPost::class,
                                         GetUsers::class,
                                         GetPosts::class,
                                         BrokenFunction::class

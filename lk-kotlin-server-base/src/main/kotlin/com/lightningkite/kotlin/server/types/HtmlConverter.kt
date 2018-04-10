@@ -89,7 +89,7 @@ class HtmlConverter : Parser, Renderer {
 
     fun retrieveAny(kclass: KClass<*>): HtmlSubConverter<Any> = retrieve(kclass) as HtmlSubConverter<Any>
 
-    var maxCallDepth = 1
+    var maxCallDepth = 0
 
     override fun <T> parse(type: TypeInformation, httpRequest: HttpRequest, getTransaction: () -> Transaction): T {
         val context = Context(this, httpRequest, getTransaction)
@@ -267,7 +267,11 @@ class HtmlConverter : Parser, Renderer {
                 override fun renderForm(info: LevelInfo<Enum<*>>, to: Appendable) {
                     to.append("<select name=\"${info.name}\">")
                     for (item in enumValues) {
-                        to.append("<option value=\"${item.key}\">")
+                        to.append("<option ")
+                        if (item.value == info.data) {
+                            to.append("selected=\"selected\" ")
+                        }
+                        to.append("value=\"${item.key}\">")
                         to.append(item.value.name.nameify())
                         to.append("</option>")
                     }
@@ -615,7 +619,7 @@ class HtmlConverter : Parser, Renderer {
                                     callDepth = info.callDepth,
                                     type = TypeInformation(linkTo.javaClass.kotlin),
                                     property = info.property,
-                                    name = "${info.name}.retrieval",
+                                    name = "value",
                                     data = linkTo
                             )
                             val params = HashMap<String, String>()
@@ -623,6 +627,10 @@ class HtmlConverter : Parser, Renderer {
                                     .renderParametersSafe(sub, params)
                             val paramString = paramsToQueryString(params)
                             to.append("""<a href="${linkTo.javaClass.kotlin.urlName() + paramString}">""")
+                            to.append(info.type.typeParameters.first().kclass.friendlyName)
+                            to.append(" (")
+                            to.append(info.data.key?.toString())
+                            to.append(")")
                             to.append("</a>")
                         }
                         else -> {
@@ -654,7 +662,11 @@ class HtmlConverter : Parser, Renderer {
                 for (item in options) {
                     val key = item?.let { pointType.kclass.getPrimaryKeyValue(it) }
                     val keyString = keyToString(key)
-                    to.append("<option value=\"$keyString\">")
+                    to.append("<option ")
+                    if (key == info.data?.key) {
+                        to.append("selected=\"selected\" ")
+                    }
+                    to.append("value=\"$keyString\">")
                     to.append(item?.toString() ?: "None")
                     to.append("</option>")
                 }
@@ -840,7 +852,8 @@ class HtmlConverter : Parser, Renderer {
                                     data = null
                             )
                             val value = prop.subConverter.parseSafe(subInfo)
-                            prop.property.setUntyped(instance, value)
+                            if (value != null || prop.type.nullable)
+                                prop.property.setUntyped(instance, value)
                         } catch (e: Exception) {
                             e.printStackTrace()
                         }
@@ -857,7 +870,8 @@ class HtmlConverter : Parser, Renderer {
                                     data = null
                             )
                             val value = prop.subConverter.parseSafe(subInfo)
-                            prop.property.setUntyped(instance, value)
+                            if (value != null || prop.type.nullable)
+                                prop.property.setUntyped(instance, value)
                         } catch (e: Exception) {
                             e.printStackTrace()
                         }

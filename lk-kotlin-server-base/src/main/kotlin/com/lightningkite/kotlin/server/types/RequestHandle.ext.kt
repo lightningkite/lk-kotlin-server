@@ -6,7 +6,8 @@ import lk.kotlin.reflect.typeInformation
 
 inline fun <reified T : Any> HttpRequest.inputAs(context: Context = mutableMapOf(), user: Any? = null): T = inputAs(context, user, typeInformation<T>())
 fun <T> HttpRequest.inputAs(context: Context = mutableMapOf(), user: Any? = null, typeInformation: TypeInformation): T {
-    val parser = CentralContentTypeMap.parsers[contentType()?.parameterless()]
+    val contentType = contentType()?.parameterless() ?: ContentType.Application.FormUrlEncoded.parameterless()
+    val parser = CentralContentTypeMap.parsers[contentType]
             ?: throw IllegalArgumentException("Content type ${contentType()} not understood.")
     return parser.parse(
             type = typeInformation,

@@ -5,7 +5,6 @@ import lk.kotlin.reflect.TypeInformation
 import lk.kotlin.reflect.annotations.friendlyName
 import lk.kotlin.reflect.fastMutableProperties
 import kotlin.reflect.KClass
-import kotlin.reflect.full.createInstance
 
 fun KClass<*>.urlName() = friendlyName.toLowerCase().replace(' ', '-')
 
@@ -23,7 +22,7 @@ fun HttpRequestHandlerBuilder.rpc(
         if (functionType.kclass.fastMutableProperties.isEmpty()) {
             get(funcUrl) {
                 val user = getUser(this)
-                val request = functionType.kclass.createInstance() as ServerFunction<*>
+                val request = inputAs<ServerFunction<*>>(context = context, user = user, typeInformation = functionType)
                 val result = Transaction(context, user).use {
                     request.invoke(it)
                 }
@@ -33,7 +32,9 @@ fun HttpRequestHandlerBuilder.rpc(
             }
         } else {
             get(funcUrl) {
-                respondWith(context = context, user = null, typeInformation = functionType, output = functionType.kclass.createInstance())
+                val user = getUser(this)
+                val request = inputAs<ServerFunction<*>>(context = context, user = user, typeInformation = functionType)
+                respondWith(context = context, user = null, typeInformation = functionType, output = request)
             }
         }
         post(funcUrl) {
