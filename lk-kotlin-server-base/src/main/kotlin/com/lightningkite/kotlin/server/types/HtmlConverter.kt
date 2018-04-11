@@ -741,148 +741,43 @@ class HtmlConverter : Parser, Renderer {
 
             }
         }
+    }
 
-        subGenerators += sub@{ kclass ->
-            //Any!
-            return@sub object : HtmlSubConverter<Any> {
+    val defaultGenerator: (KClass<*>) -> HtmlSubConverter<*> = sub@{ kclass ->
+        //Any!
+        return@sub object : HtmlSubConverter<Any> {
 
-                val subPropertiesHidden = kclass.fastMutableProperties.values.filter { it.hidden }.map {
-                    SubField(
-                            property = it as KMutableProperty1<Any, Any?>,
-                            subConverter = this@HtmlConverter.retrieveAny(it.fastType.kclass)
-                    )
-                }.toTypedArray()
-                val subProperties = kclass.fastMutableProperties.values.filter { !it.hidden }.map {
-                    SubField(
-                            property = it as KMutableProperty1<Any, Any?>,
-                            subConverter = this@HtmlConverter.retrieveAny(it.fastType.kclass)
-                    )
-                }.toTypedArray()
+            val subPropertiesHidden = kclass.fastMutableProperties.values.filter { it.hidden }.map {
+                SubField(
+                        property = it as KMutableProperty1<Any, Any?>,
+                        subConverter = this@HtmlConverter.retrieveAny(it.fastType.kclass)
+                )
+            }.toTypedArray()
+            val subProperties = kclass.fastMutableProperties.values.filter { !it.hidden }.map {
+                SubField(
+                        property = it as KMutableProperty1<Any, Any?>,
+                        subConverter = this@HtmlConverter.retrieveAny(it.fastType.kclass)
+                )
+            }.toTypedArray()
 
-                override fun render(info: LevelInfo<Any>, to: Appendable) {
-                    if (info.data is ServerFunction<*>) {
-                        to.append("""<form method="post" action="#">""")
-                        renderForm(info, to)
-                        to.append("""<input class="submit" type="submit" value="Submit"/>""")
-                        to.append("""</form>""")
-                        return
-                    }
-                    to.append("""<div class="object">""")
-                    to.append("""<p class="object-type">${info.type.kclass.friendlyName}</p>""")
-                    if (info.data == null) {
-                        to.append("<p>null</p>")
-                    } else {
-                        to.append("<dl>")
-                        for (prop in subProperties) {
-                            val properName = prop.property.friendlyName
-                            to.append("<dt>$properName</dt>")
-                            to.append("<dd>")
-                            val subInfo = LevelInfo(
-                                    context = info.context,
-                                    depth = info.depth + 1,
-                                    callDepth = info.callDepth,
-                                    type = prop.type,
-                                    property = prop.property,
-                                    name = info.name + "." + prop.name,
-                                    data = prop.property.get(info.data!!)
-                            )
-                            prop.subConverter.renderSafe(subInfo, to)
-                            to.append("</dd>")
-                        }
-                        to.append("</dl>")
-                        to.append("</div>")
-                    }
+            override fun render(info: LevelInfo<Any>, to: Appendable) {
+                if (info.data is ServerFunction<*>) {
+                    to.append("""<form method="post" action="#">""")
+                    renderForm(info, to)
+                    to.append("""<input class="submit" type="submit" value="Submit"/>""")
+                    to.append("""</form>""")
+                    return
                 }
-
-                override fun renderForm(info: LevelInfo<Any>, to: Appendable) {
-                    to.append("""<div class="object">""")
-                    to.append("""<p class="object-type">${info.type.kclass.friendlyName}</p>""")
-                    if (info.data == null) {
-                        to.append("<p>null</p>")
-                    } else {
-                        for (prop in subPropertiesHidden) {
-                            val subInfo = LevelInfo(
-                                    context = info.context,
-                                    depth = info.depth + 1,
-                                    callDepth = info.callDepth,
-                                    type = prop.type,
-                                    property = prop.property,
-                                    name = info.name + "." + prop.name,
-                                    data = prop.property.get(info.data!!)
-                            )
-                            val toMap = HashMap<String, String>()
-                            prop.subConverter.renderParametersSafe(subInfo, toMap)
-                            for ((key, value) in toMap) {
-                                to.append("""<input name="$key" type="hidden" value="$value"/>""")
-                            }
-                        }
-                        to.append("<dl>")
-                        for (prop in subProperties) {
-                            val properName = prop.property.friendlyName
-                            to.append("<dt>$properName</dt>")
-                            to.append("<dd>")
-                            val subInfo = LevelInfo(
-                                    context = info.context,
-                                    depth = info.depth + 1,
-                                    callDepth = info.callDepth,
-                                    type = prop.type,
-                                    property = prop.property,
-                                    name = info.name + "." + prop.name,
-                                    data = prop.property.get(info.data!!)
-                            )
-                            prop.subConverter.renderFormSafe(subInfo, to)
-                            to.append("</dd>")
-                        }
-                        to.append("</dl>")
-                        to.append("</div>")
-                    }
-                }
-
-                override fun parse(info: LevelInfo<Any>): Any? {
-                    val instance = info.type.kclass.createInstance()
+                to.append("""<div class="object">""")
+                to.append("""<p class="object-type">${info.type.kclass.friendlyName}</p>""")
+                if (info.data == null) {
+                    to.append("<p>null</p>")
+                } else {
+                    to.append("<dl>")
                     for (prop in subProperties) {
-                        try {
-                            val subInfo = LevelInfo(
-                                    context = info.context,
-                                    depth = info.depth + 1,
-                                    callDepth = info.callDepth,
-                                    type = prop.type,
-                                    property = prop.property,
-                                    name = info.name + "." + prop.name,
-                                    data = null
-                            )
-                            val value = prop.subConverter.parseSafe(subInfo)
-                            if (value != null || prop.type.nullable)
-                                prop.property.setUntyped(instance, value)
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
-                    }
-                    for (prop in subPropertiesHidden) {
-                        try {
-                            val subInfo = LevelInfo(
-                                    context = info.context,
-                                    depth = info.depth + 1,
-                                    callDepth = info.callDepth,
-                                    type = prop.type,
-                                    property = prop.property,
-                                    name = info.name + "." + prop.name,
-                                    data = null
-                            )
-                            val value = prop.subConverter.parseSafe(subInfo)
-                            if (value != null || prop.type.nullable)
-                                prop.property.setUntyped(instance, value)
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
-                    }
-                    return instance
-                }
-
-                override fun renderParameters(info: LevelInfo<Any>, to: MutableMap<String, String>) {
-                    if (info.data == null) return
-                    for (prop in subProperties) {
-                        val value = prop.property.get(info.data)
+                        val properName = prop.property.friendlyName
+                        to.append("<dt>$properName</dt>")
+                        to.append("<dd>")
                         val subInfo = LevelInfo(
                                 context = info.context,
                                 depth = info.depth + 1,
@@ -890,27 +785,136 @@ class HtmlConverter : Parser, Renderer {
                                 type = prop.type,
                                 property = prop.property,
                                 name = info.name + "." + prop.name,
-                                data = value
+                                data = prop.property.get(info.data!!)
                         )
-                        prop.subConverter.renderParametersSafe(subInfo, to)
+                        prop.subConverter.renderSafe(subInfo, to)
+                        to.append("</dd>")
                     }
-                    for (prop in subPropertiesHidden) {
-                        val value = prop.property.get(info.data)
-                        val subInfo = LevelInfo(
-                                context = info.context,
-                                depth = info.depth + 1,
-                                callDepth = info.callDepth,
-                                type = prop.type,
-                                property = prop.property,
-                                name = info.name + "." + prop.name,
-                                data = value
-                        )
-                        prop.subConverter.renderParametersSafe(subInfo, to)
-                    }
+                    to.append("</dl>")
+                    to.append("</div>")
                 }
-
             }
+
+            override fun renderForm(info: LevelInfo<Any>, to: Appendable) {
+                to.append("""<div class="object">""")
+                to.append("""<p class="object-type">${info.type.kclass.friendlyName}</p>""")
+                if (info.data == null) {
+                    to.append("<p>null</p>")
+                } else {
+                    for (prop in subPropertiesHidden) {
+                        val subInfo = LevelInfo(
+                                context = info.context,
+                                depth = info.depth + 1,
+                                callDepth = info.callDepth,
+                                type = prop.type,
+                                property = prop.property,
+                                name = info.name + "." + prop.name,
+                                data = prop.property.get(info.data!!)
+                        )
+                        val toMap = HashMap<String, String>()
+                        prop.subConverter.renderParametersSafe(subInfo, toMap)
+                        for ((key, value) in toMap) {
+                            to.append("""<input name="$key" type="hidden" value="$value"/>""")
+                        }
+                    }
+                    to.append("<dl>")
+                    for (prop in subProperties) {
+                        val properName = prop.property.friendlyName
+                        to.append("<dt>$properName</dt>")
+                        to.append("<dd>")
+                        val subInfo = LevelInfo(
+                                context = info.context,
+                                depth = info.depth + 1,
+                                callDepth = info.callDepth,
+                                type = prop.type,
+                                property = prop.property,
+                                name = info.name + "." + prop.name,
+                                data = prop.property.get(info.data!!)
+                        )
+                        prop.subConverter.renderFormSafe(subInfo, to)
+                        to.append("</dd>")
+                    }
+                    to.append("</dl>")
+                    to.append("</div>")
+                }
+            }
+
+            override fun parse(info: LevelInfo<Any>): Any? {
+                val instance = info.type.kclass.createInstance()
+                for (prop in subProperties) {
+                    try {
+                        val subInfo = LevelInfo(
+                                context = info.context,
+                                depth = info.depth + 1,
+                                callDepth = info.callDepth,
+                                type = prop.type,
+                                property = prop.property,
+                                name = info.name + "." + prop.name,
+                                data = null
+                        )
+                        val value = prop.subConverter.parseSafe(subInfo)
+                        if (value != null || prop.type.nullable)
+                            prop.property.setUntyped(instance, value)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+                for (prop in subPropertiesHidden) {
+                    try {
+                        val subInfo = LevelInfo(
+                                context = info.context,
+                                depth = info.depth + 1,
+                                callDepth = info.callDepth,
+                                type = prop.type,
+                                property = prop.property,
+                                name = info.name + "." + prop.name,
+                                data = null
+                        )
+                        val value = prop.subConverter.parseSafe(subInfo)
+                        if (value != null || prop.type.nullable)
+                            prop.property.setUntyped(instance, value)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+                return instance
+            }
+
+            override fun renderParameters(info: LevelInfo<Any>, to: MutableMap<String, String>) {
+                if (info.data == null) return
+                for (prop in subProperties) {
+                    val value = prop.property.get(info.data)
+                    val subInfo = LevelInfo(
+                            context = info.context,
+                            depth = info.depth + 1,
+                            callDepth = info.callDepth,
+                            type = prop.type,
+                            property = prop.property,
+                            name = info.name + "." + prop.name,
+                            data = value
+                    )
+                    prop.subConverter.renderParametersSafe(subInfo, to)
+                }
+                for (prop in subPropertiesHidden) {
+                    val value = prop.property.get(info.data)
+                    val subInfo = LevelInfo(
+                            context = info.context,
+                            depth = info.depth + 1,
+                            callDepth = info.callDepth,
+                            type = prop.type,
+                            property = prop.property,
+                            name = info.name + "." + prop.name,
+                            data = value
+                    )
+                    prop.subConverter.renderParametersSafe(subInfo, to)
+                }
+            }
+
         }
+    }
+
+    init {
+        subGenerators += defaultGenerator
     }
 
     data class SubField(

@@ -14,7 +14,6 @@ import jetbrains.exodus.entitystore.PersistentEntityStores
 import lk.kotlin.reflect.TypeInformation
 import lk.kotlin.reflect.annotations.EstimatedLength
 import lk.kotlin.reflect.annotations.Hidden
-import lk.kotlin.reflect.annotations.UniqueIdentifier
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.HandlerCollection
 import org.eclipse.jetty.server.handler.ResourceHandler
@@ -44,7 +43,7 @@ class ManualTest {
     @GetFromID(GetPost::class)
     @Query(GetPosts::class)
     data class Post(
-            @UniqueIdentifier @Hidden override var id: String = "",
+            @PrimaryKey @Hidden override var id: String = "",
             var postedBy: Pointer<User, String> = Pointer(),
             var title: String = "",
             @EstimatedLength(5000) var content: String = "",
@@ -75,15 +74,15 @@ class ManualTest {
     }
 
     data class GetUser(
-            var id: String = ""
+            var id: Pointer<User, String> = Pointer()
     ) : ServerFunction<User> {
-        override fun invoke(transaction: Transaction): User = transaction.xodus.get<User>(id)
+        override fun invoke(transaction: Transaction): User = transaction.xodus.get<User>(id.key)
     }
 
     data class GetPost(
-            var id: String = ""
+            var id: Pointer<Post, String> = Pointer()
     ) : ServerFunction<Post> {
-        override fun invoke(transaction: Transaction): Post = transaction.xodus.get<Post>(id)
+        override fun invoke(transaction: Transaction): Post = transaction.xodus.get<Post>(id.key)
     }
 
     class GetUsers : ServerFunction<List<User>> {

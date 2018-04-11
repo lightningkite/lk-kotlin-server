@@ -23,8 +23,13 @@ val KAnnotatedElement.getFromID: KClass<out ServerFunction<*>>?
 fun KAnnotatedElement.getFromId(id: Any) = getFromID?.primaryConstructor?.let {
     val param = it.parameters.first()
     it.callBy(mapOf(
-            param to id
+            param to Pointer<Any, Any?>(id)
     ))
 }
 
-fun KAnnotatedElement.getFromId(pointer: Pointer<*, *>) = getFromId(pointer.key!!)
+fun KAnnotatedElement.getFromId(pointer: Pointer<*, *>) = getFromID?.primaryConstructor?.let {
+    val param = it.parameters.first()
+    it.callBy(mapOf(
+            param to pointer
+    ))
+}
