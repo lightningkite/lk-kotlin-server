@@ -1,2 +1,9 @@
 rootProject.name = 'lk-kotlin-server'
 include 'lk-kotlin-server-base'
+include 'types-common'
+include 'base'
+include 'jetty'
+include 'types'
+include 'xodus'
+include 'types-html'
+

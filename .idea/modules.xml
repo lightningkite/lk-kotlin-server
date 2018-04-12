@@ -2,10 +2,26 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/base.iml" filepath="$PROJECT_DIR$/.idea/modules/base.iml" group="base" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/base/base_main.iml" filepath="$PROJECT_DIR$/.idea/modules/base/base_main.iml" group="base" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/base/base_test.iml" filepath="$PROJECT_DIR$/.idea/modules/base/base_test.iml" group="base" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/jetty.iml" filepath="$PROJECT_DIR$/.idea/modules/jetty.iml" group="jetty" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/jetty/jetty_main.iml" filepath="$PROJECT_DIR$/.idea/modules/jetty/jetty_main.iml" group="jetty" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/jetty/jetty_test.iml" filepath="$PROJECT_DIR$/.idea/modules/jetty/jetty_test.iml" group="jetty" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/lk-kotlin-server.iml" filepath="$PROJECT_DIR$/.idea/modules/lk-kotlin-server.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/lk-kotlin-server-base.iml" filepath="$PROJECT_DIR$/.idea/modules/lk-kotlin-server-base.iml" group="lk-kotlin-server-base" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/lk-kotlin-server-base/lk-kotlin-server-base_main.iml" filepath="$PROJECT_DIR$/.idea/modules/lk-kotlin-server-base/lk-kotlin-server-base_main.iml" group="lk-kotlin-server-base" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/lk-kotlin-server-base/lk-kotlin-server-base_test.iml" filepath="$PROJECT_DIR$/.idea/modules/lk-kotlin-server-base/lk-kotlin-server-base_test.iml" group="lk-kotlin-server-base" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/lk-kotlin-server-base/lk-kotlin-server-base.iml" filepath="$PROJECT_DIR$/.idea/modules/lk-kotlin-server-base/lk-kotlin-server-base.iml" group="lk-kotlin-server-base" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/types.iml" filepath="$PROJECT_DIR$/.idea/modules/types.iml" group="types" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/types-common/types-common.iml" filepath="$PROJECT_DIR$/.idea/modules/types-common/types-common.iml" group="types-common" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/types-common/types-common_main.iml" filepath="$PROJECT_DIR$/.idea/modules/types-common/types-common_main.iml" group="types-common" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/types-common/types-common_test.iml" filepath="$PROJECT_DIR$/.idea/modules/types-common/types-common_test.iml" group="types-common" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/types-html.iml" filepath="$PROJECT_DIR$/.idea/modules/types-html.iml" group="types-html" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/types-html/types-html_main.iml" filepath="$PROJECT_DIR$/.idea/modules/types-html/types-html_main.iml" group="types-html" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/types-html/types-html_test.iml" filepath="$PROJECT_DIR$/.idea/modules/types-html/types-html_test.iml" group="types-html" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/types/types_main.iml" filepath="$PROJECT_DIR$/.idea/modules/types/types_main.iml" group="types" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/types/types_test.iml" filepath="$PROJECT_DIR$/.idea/modules/types/types_test.iml" group="types" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/xodus.iml" filepath="$PROJECT_DIR$/.idea/modules/xodus.iml" group="xodus" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/xodus/xodus_main.iml" filepath="$PROJECT_DIR$/.idea/modules/xodus/xodus_main.iml" group="xodus" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/xodus/xodus_test.iml" filepath="$PROJECT_DIR$/.idea/modules/xodus/xodus_test.iml" group="xodus" />
     </modules>
   </component>
 </project>
