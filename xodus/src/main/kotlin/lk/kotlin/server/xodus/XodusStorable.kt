@@ -1,8 +1,6 @@
 package lk.kotlin.server.xodus
 
-import lk.kotlin.server.types.common.HasId
+import lk.kotlin.server.types.common.HasMutableId
 
 
-interface XodusStorable : HasId<String> {
-    override var id: String
-}
+typealias XodusStorable = HasMutableId<String>

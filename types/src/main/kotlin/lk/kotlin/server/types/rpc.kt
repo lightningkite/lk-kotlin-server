@@ -37,7 +37,7 @@ fun HttpRequestHandlerBuilder.rpc(
             get(funcUrl) {
                 val user = getUser(this)
                 val request = inputAs<ServerFunction<*>>(context = context, user = user, typeInformation = functionType)
-                respondWith(context = context, user = null, typeInformation = functionType, output = request)
+                respondWith(context = context, user = user, typeInformation = functionType, output = request)
             }
         }
         post(funcUrl) {
