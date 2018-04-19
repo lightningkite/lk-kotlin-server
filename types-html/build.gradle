@@ -35,6 +35,7 @@ dependencies {
     implementation "com.lightningkite.kotlin:jvm-utils:${rootProject.libraryVersion}"
     implementation "com.lightningkite.kotlin:jackson:${rootProject.libraryVersion}"
     implementation "com.lightningkite.kotlin:reflect:${rootProject.libraryVersion}"
+    implementation "com.lightningkite.kotlin:reflect-jackson:${rootProject.libraryVersion}"
 
     compile 'org.jetbrains.xodus:xodus-openAPI:1.0.5'
     compile 'org.jetbrains.xodus:xodus-entity-store:1.0.5'

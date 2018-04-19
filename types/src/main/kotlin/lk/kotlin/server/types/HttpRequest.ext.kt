@@ -33,6 +33,23 @@ inline fun <reified T : Any> HttpRequest.respondWith(
         output = output
 )
 
+fun <T : Any> HttpRequest.respondWithImplied(
+        context: Context = mutableMapOf(),
+        user: Any? = null,
+        code: Int = 200,
+        headers: Map<String, List<String>> = mapOf(),
+        addCookies: List<HttpCookie> = listOf(),
+        output: T
+) = respondWith(
+        context = context,
+        user = user,
+        code = code,
+        headers = headers,
+        addCookies = addCookies,
+        typeInformation = TypeInformation(kclass = output.javaClass.kotlin),
+        output = output
+)
+
 fun <T> HttpRequest.respondWith(
         context: Context = mutableMapOf(),
         user: Any? = null,
@@ -44,7 +61,7 @@ fun <T> HttpRequest.respondWith(
 ) {
     val rendererType = this.accepts().firstOrNull {
         CentralContentTypeMap.renderers.containsKey(it.parameterless())
-    } ?: throw IllegalArgumentException("Content types ${accepts().joinToString()} not understood.")
+    } ?: ContentType.Application.Json
     respond(
             code = code,
             headers = headers,

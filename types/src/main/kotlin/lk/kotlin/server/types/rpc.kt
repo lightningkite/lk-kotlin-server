@@ -1,8 +1,13 @@
 package lk.kotlin.server.types
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.module.kotlin.readValue
+import lk.kotlin.jackson.jacksonToNode
+import lk.kotlin.jackson.jacksonToString
 import lk.kotlin.reflect.TypeInformation
 import lk.kotlin.reflect.annotations.friendlyName
 import lk.kotlin.reflect.fastMutableProperties
+import lk.kotlin.reflect.typeInformation
 import lk.kotlin.server.base.*
 import lk.kotlin.server.types.common.ServerFunction
 import lk.kotlin.server.types.log.HistoricalServerFunction
@@ -79,5 +84,19 @@ fun HttpRequestHandlerBuilder.rpc(
         }
         logger?.log(HistoricalServerFunction(userIdentifier = user, call = request, result = result))
         respondWith(context = context, user = user, typeInformation = request.javaClass.kotlin.returnType, output = result)
+    }
+    post("$url/bulkjson") {
+        val user = getUser(this)
+        val requests = CentralContentTypeMap.json.mapper
+                .readValue<List<ServerFunction<*>>>(input)
+        val result = Transaction(context, user).use { txn ->
+            requests.map { it.invoke(txn) }
+        }
+        //TODO log?
+        respond(
+                code = 200,
+                contentType = ContentType.Application.Json,
+                data = result.jacksonToString(CentralContentTypeMap.json.mapper).toByteArray()
+        )
     }
 }

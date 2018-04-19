@@ -3,6 +3,7 @@ package lk.kotlin.server.types
 import lk.kotlin.reflect.TypeInformation
 import lk.kotlin.server.base.HttpRequest
 import lk.kotlin.server.base.HttpRequestHandler
+import lk.kotlin.server.base.ServerSettings
 
 class TypedException(val code: Int, val type: TypeInformation, val data: Any?) : Exception(data.toString())
 
@@ -23,10 +24,19 @@ class TypedExceptionHttpRequestHandler() : HttpRequestHandler() {
                     output = e.data
             )
         } catch (e: Exception) {
-            request.respondWith(
-                    code = 500,
-                    typeInformation = TypeInformation(Exception::class),
-                    output = e
+            val code = when(e){
+                is IllegalArgumentException -> 400
+                is IllegalAccessException -> 403
+                else -> {
+                    e.printStackTrace()
+                    500
+                }
+            }
+            val data:Any = if(ServerSettings.debugMode) e else e.message ?: ""
+
+            request.respondWithImplied(
+                    code = code,
+                    output = data
             )
         }
         return true

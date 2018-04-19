@@ -1,10 +1,13 @@
 package lk.kotlin.server.types.html
 
 import jetbrains.exodus.entitystore.PersistentEntityStores
+import lk.kotlin.jackson.MyJackson
+import lk.kotlin.reflect.ExternalClassRegistry
 import lk.kotlin.reflect.TypeInformation
 import lk.kotlin.reflect.annotations.EstimatedLength
 import lk.kotlin.reflect.annotations.Hidden
 import lk.kotlin.reflect.annotations.Password
+import lk.kotlin.reflect.jackson.useExternalClassRegistry
 import lk.kotlin.server.base.Context
 import lk.kotlin.server.base.ServerSettings
 import lk.kotlin.server.base.respondHtml
@@ -61,9 +64,10 @@ class ManualTest {
     @Query(Post.Query::class)
     data class Post(
             @Hidden override var id: String = "",
-            var postedBy: User.Get = User.Get(),
+            var postedBy: User.Get? = null,
             var title: String = "",
             @EstimatedLength(5000) var content: String = "",
+            var tags: List<String> = listOf(),
             var created: Date = Date()
     ) : XodusStorable {
         override fun toString(): String {
@@ -148,6 +152,19 @@ class ManualTest {
         }
 
         setupFunctionality()
+        val functions = listOf(
+                HelloWorldFunction::class,
+                User.Add::class,
+                User.Get::class,
+                User.Query::class,
+                Post.Add::class,
+                Post.Get::class,
+                Post.Query::class,
+                BrokenFunction::class
+        )
+
+        functions.forEach { ExternalClassRegistry.registerWithSubtypes(it) }
+        MyJackson.mapper.useExternalClassRegistry()
 
         Server(8080).apply {
             handler = HandlerCollection(
@@ -164,16 +181,7 @@ class ManualTest {
                                 context = context,
                                 getUser = { null },
                                 logger = SimpleServerFunctionLogger(),
-                                functionList = listOf(
-                                        HelloWorldFunction::class,
-                                        User.Add::class,
-                                        User.Get::class,
-                                        User.Query::class,
-                                        Post.Add::class,
-                                        Post.Get::class,
-                                        Post.Query::class,
-                                        BrokenFunction::class
-                                ).map { TypeInformation(it) }
+                                functionList = functions.map { TypeInformation(it) }
                         )
                     }.asJettyHandler(),
                     ResourceHandler().apply {

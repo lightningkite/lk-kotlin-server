@@ -62,6 +62,52 @@ class HtmlConverter : Parser, Renderer {
         fun renderParameters(info: LevelInfo<T>, to: MutableMap<String, String>)
     }
 
+    interface HtmlSubConverterNullHandling<T> : HtmlSubConverter<T> {
+
+        fun renderNonNull(info: LevelInfo<T>, to: Appendable)
+        fun renderFormNonNull(info: LevelInfo<T>, to: Appendable)
+        fun parseNonNull(info: LevelInfo<T>): T?
+        fun renderParametersNonNull(info: LevelInfo<T>, to: MutableMap<String, String>)
+
+        override fun render(info: LevelInfo<T>, to: Appendable) {
+            if(info.data == null)
+                to.append("null")
+            else
+                renderNonNull(info, to)
+        }
+
+        override fun renderForm(info: LevelInfo<T>, to: Appendable) {
+            if (info.type.nullable) {
+                to.append("""<p>Null?  <input type="checkbox" name="${info.name}.isNull" value="true"/></p>""")
+                renderFormNonNull(info.copy(data = info.type.kclass.createInstance() as T), to)
+            } else {
+                renderFormNonNull(info, to)
+            }
+        }
+
+        override fun parse(info: LevelInfo<T>): T? {
+            return if (info.type.nullable) {
+                if (info.context.httpRequest.parameter("${info.name}.isNull") == "true")
+                    null
+                else
+                    parseNonNull(info)
+            } else {
+                parseNonNull(info)
+            }
+        }
+
+        override fun renderParameters(info: LevelInfo<T>, to: MutableMap<String, String>) {
+            if (info.type.nullable) {
+                if (info.data == null)
+                    to["${info.name}.isNull"] = "true"
+                else
+                    renderParametersNonNull(info, to)
+            } else {
+                renderParametersNonNull(info, to)
+            }
+        }
+    }
+
     fun <T> HtmlSubConverter<T>.renderSafe(info: LevelInfo<T>, to: Appendable) = try {
         render(info, to)
     } catch (e: Exception) {
@@ -165,20 +211,20 @@ class HtmlConverter : Parser, Renderer {
 
     //Some defaults
 
-    inline fun <T : Number> numberConverter(crossinline stringToNum: (String) -> T?) = object : HtmlSubConverter<T> {
-        override fun render(info: LevelInfo<T>, to: Appendable) {
+    inline fun <T : Number> numberConverter(crossinline stringToNum: (String) -> T?) = object : HtmlSubConverterNullHandling<T> {
+        override fun renderNonNull(info: LevelInfo<T>, to: Appendable) {
             to.append(info.data.toString())
         }
 
-        override fun renderForm(info: LevelInfo<T>, to: Appendable) {
+        override fun renderFormNonNull(info: LevelInfo<T>, to: Appendable) {
             to.append("""<input type="number" name="${info.name}" value="${info.data}"/>""")
         }
 
-        override fun parse(info: LevelInfo<T>): T? {
+        override fun parseNonNull(info: LevelInfo<T>): T? {
             return info.context.httpRequest.parameter(info.name)?.let(stringToNum)
         }
 
-        override fun renderParameters(info: LevelInfo<T>, to: MutableMap<String, String>) {
+        override fun renderParametersNonNull(info: LevelInfo<T>, to: MutableMap<String, String>) {
             info.data?.toString()?.let { to[info.name] = it }
         }
     }
@@ -191,8 +237,8 @@ class HtmlConverter : Parser, Renderer {
         register(Float::class, numberConverter { it.toFloatOrNull() })
         register(Double::class, numberConverter { it.toDoubleOrNull() })
 
-        register(Boolean::class, object : HtmlSubConverter<Boolean> {
-            override fun render(info: LevelInfo<Boolean>, to: Appendable) {
+        register(Boolean::class, object : HtmlSubConverterNullHandling<Boolean> {
+            override fun renderNonNull(info: LevelInfo<Boolean>, to: Appendable) {
                 when (info.data) {
                     true -> to.append('☑')
                     false -> to.append('☐')
@@ -200,21 +246,21 @@ class HtmlConverter : Parser, Renderer {
                 }
             }
 
-            override fun renderForm(info: LevelInfo<Boolean>, to: Appendable) {
+            override fun renderFormNonNull(info: LevelInfo<Boolean>, to: Appendable) {
                 to.append("""<input type="checkbox" name="${info.name}" value="true"/>""")
             }
 
-            override fun parse(info: LevelInfo<Boolean>): Boolean? {
+            override fun parseNonNull(info: LevelInfo<Boolean>): Boolean? {
                 return info.context.httpRequest.parameter(info.name)?.toBoolean()
             }
 
-            override fun renderParameters(info: LevelInfo<Boolean>, to: MutableMap<String, String>) {
+            override fun renderParametersNonNull(info: LevelInfo<Boolean>, to: MutableMap<String, String>) {
                 info.data?.toString()?.let { to[info.name] = it }
             }
         })
 
-        register(String::class, object : HtmlSubConverter<String> {
-            override fun render(info: LevelInfo<String>, to: Appendable) {
+        register(String::class, object : HtmlSubConverterNullHandling<String> {
+            override fun renderNonNull(info: LevelInfo<String>, to: Appendable) {
                 if ((info.type.estimatedLength ?: 0) < 255)
                     to.append(info.data)
                 else {
@@ -224,7 +270,7 @@ class HtmlConverter : Parser, Renderer {
                 }
             }
 
-            override fun renderForm(info: LevelInfo<String>, to: Appendable) {
+            override fun renderFormNonNull(info: LevelInfo<String>, to: Appendable) {
                 if ((info.type.estimatedLength ?: 0) < 255) {
                     val inputType = if (info.property?.password ?: false) "password" else "text"
                     to.append("""<input type="$inputType" name="${info.name}" value="${info.data}"/>""")
@@ -235,31 +281,31 @@ class HtmlConverter : Parser, Renderer {
                 }
             }
 
-            override fun parse(info: LevelInfo<String>): String? {
+            override fun parseNonNull(info: LevelInfo<String>): String? {
                 return info.context.httpRequest.parameter(info.name)
             }
 
-            override fun renderParameters(info: LevelInfo<String>, to: MutableMap<String, String>) {
+            override fun renderParametersNonNull(info: LevelInfo<String>, to: MutableMap<String, String>) {
                 info.data?.let { to[info.name] = it }
             }
         })
 
-        register(Date::class, object : HtmlSubConverter<Date> {
-            override fun render(info: LevelInfo<Date>, to: Appendable) {
+        register(Date::class, object : HtmlSubConverterNullHandling<Date> {
+            override fun renderNonNull(info: LevelInfo<Date>, to: Appendable) {
                 to.append(info.data?.let { DateFormat.getDateTimeInstance().format(it) })
             }
 
-            override fun renderForm(info: LevelInfo<Date>, to: Appendable) {
+            override fun renderFormNonNull(info: LevelInfo<Date>, to: Appendable) {
                 val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm")
                 to.append("""<input type="datetime-local" name="${info.name}" value="${info.data?.let { format.format(it) }}"/>""")
             }
 
-            override fun parse(info: LevelInfo<Date>): Date? {
+            override fun parseNonNull(info: LevelInfo<Date>): Date? {
                 val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm")
                 return info.context.httpRequest.parameter(info.name)?.let { format.parse(it) }
             }
 
-            override fun renderParameters(info: LevelInfo<Date>, to: MutableMap<String, String>) {
+            override fun renderParametersNonNull(info: LevelInfo<Date>, to: MutableMap<String, String>) {
                 val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm")
                 info.data?.let { format.format(it) }?.let { to[info.name] = it }
             }
@@ -267,15 +313,15 @@ class HtmlConverter : Parser, Renderer {
 
         subGenerators += sub@{ kclass ->
             if (!kclass.allSuperclasses.contains(Enum::class)) return@sub null
-            return@sub object : HtmlSubConverter<Enum<*>> {
+            return@sub object : HtmlSubConverterNullHandling<Enum<*>> {
 
                 val enumValues = kclass.enumValues
 
-                override fun render(info: LevelInfo<Enum<*>>, to: Appendable) {
+                override fun renderNonNull(info: LevelInfo<Enum<*>>, to: Appendable) {
                     to.append(info.data?.name?.nameify())
                 }
 
-                override fun renderForm(info: LevelInfo<Enum<*>>, to: Appendable) {
+                override fun renderFormNonNull(info: LevelInfo<Enum<*>>, to: Appendable) {
                     to.append("<select name=\"${info.name}\">")
                     for (item in enumValues) {
                         to.append("<option ")
@@ -289,18 +335,18 @@ class HtmlConverter : Parser, Renderer {
                     to.append("</select>")
                 }
 
-                override fun parse(info: LevelInfo<Enum<*>>): Enum<*>? {
+                override fun parseNonNull(info: LevelInfo<Enum<*>>): Enum<*>? {
                     return info.type.kclass.enumValues[info.context.httpRequest.parameter(info.name)]
                 }
 
-                override fun renderParameters(info: LevelInfo<Enum<*>>, to: MutableMap<String, String>) {
+                override fun renderParametersNonNull(info: LevelInfo<Enum<*>>, to: MutableMap<String, String>) {
                     info.data?.name?.let { to[info.name] = it }
                 }
             }
         }
 
-        register(List::class, object : HtmlSubConverter<List<*>> {
-            override fun render(info: LevelInfo<List<*>>, to: Appendable) {
+        register(List::class, object : HtmlSubConverterNullHandling<List<*>> {
+            override fun renderNonNull(info: LevelInfo<List<*>>, to: Appendable) {
                 if (info.data == null) to.append("null list")
                 else {
                     to.append("<ul>")
@@ -322,7 +368,7 @@ class HtmlConverter : Parser, Renderer {
                 }
             }
 
-            override fun renderForm(info: LevelInfo<List<*>>, to: Appendable) {
+            override fun renderFormNonNull(info: LevelInfo<List<*>>, to: Appendable) {
                 to.append("""<input name="${info.name}" type="hidden" value="${info.data?.size}"/>""")
                 if (info.data == null) to.append("null list")
                 else {
@@ -345,8 +391,9 @@ class HtmlConverter : Parser, Renderer {
                 }
             }
 
-            override fun parse(info: LevelInfo<List<*>>): List<*>? {
-                val count = info.context.httpRequest.parameter(info.name)?.toIntOrNull() ?: return null
+            override fun parseNonNull(info: LevelInfo<List<*>>): List<*>? {
+                val count = info.context.httpRequest.parameter(info.name)?.toIntOrNull()
+                        ?: return null
                 val result = ArrayList<Any?>()
                 for (index in 0 until count) {
                     val sub = LevelInfo(
@@ -363,7 +410,7 @@ class HtmlConverter : Parser, Renderer {
                 return result
             }
 
-            override fun renderParameters(info: LevelInfo<List<*>>, to: MutableMap<String, String>) {
+            override fun renderParametersNonNull(info: LevelInfo<List<*>>, to: MutableMap<String, String>) {
                 info.data?.let {
                     it.forEachIndexed { index, any ->
                         val sub = LevelInfo(
@@ -384,9 +431,9 @@ class HtmlConverter : Parser, Renderer {
         //Should this exist?
         subGenerators += sub@{ kclass ->
             if (!kclass.allSuperclasses.contains(MutableList::class) && kclass != MutableList::class) return@sub null
-            return@sub object : HtmlSubConverter<List<*>> {
+            return@sub object : HtmlSubConverterNullHandling<List<*>> {
 
-                override fun render(info: LevelInfo<List<*>>, to: Appendable) {
+                override fun renderNonNull(info: LevelInfo<List<*>>, to: Appendable) {
                     if (info.data == null) to.append("null list")
                     else {
                         to.append("<ul>")
@@ -408,7 +455,7 @@ class HtmlConverter : Parser, Renderer {
                     }
                 }
 
-                override fun renderForm(info: LevelInfo<List<*>>, to: Appendable) {
+                override fun renderFormNonNull(info: LevelInfo<List<*>>, to: Appendable) {
                     to.append("""<input name="${info.name}" type="hidden" value="${info.data?.size}"/>""")
                     if (info.data == null) to.append("null list")
                     else {
@@ -431,8 +478,9 @@ class HtmlConverter : Parser, Renderer {
                     }
                 }
 
-                override fun parse(info: LevelInfo<List<*>>): List<*>? {
-                    val count = info.context.httpRequest.parameter(info.name)?.toIntOrNull() ?: return null
+                override fun parseNonNull(info: LevelInfo<List<*>>): List<*>? {
+                    val count = info.context.httpRequest.parameter(info.name)?.toIntOrNull()
+                            ?: return null
                     val result = if (kclass.isAbstract) ArrayList<Any?>() else kclass.createInstance() as MutableList<Any?>
                     for (index in 0 until count) {
                         val sub = LevelInfo(
@@ -449,7 +497,7 @@ class HtmlConverter : Parser, Renderer {
                     return result
                 }
 
-                override fun renderParameters(info: LevelInfo<List<*>>, to: MutableMap<String, String>) {
+                override fun renderParametersNonNull(info: LevelInfo<List<*>>, to: MutableMap<String, String>) {
                     info.data?.let {
                         it.forEachIndexed { index, any ->
                             val sub = LevelInfo(
@@ -468,8 +516,8 @@ class HtmlConverter : Parser, Renderer {
             }
         }
 
-        register(Map::class, object : HtmlSubConverter<Map<*, *>> {
-            override fun render(info: LevelInfo<Map<*, *>>, to: Appendable) {
+        register(Map::class, object : HtmlSubConverterNullHandling<Map<*, *>> {
+            override fun renderNonNull(info: LevelInfo<Map<*, *>>, to: Appendable) {
                 if (info.data == null) to.append("null list")
                 else {
                     to.append("<dl>")
@@ -503,7 +551,7 @@ class HtmlConverter : Parser, Renderer {
                 }
             }
 
-            override fun renderForm(info: LevelInfo<Map<*, *>>, to: Appendable) {
+            override fun renderFormNonNull(info: LevelInfo<Map<*, *>>, to: Appendable) {
                 to.append("""<input name="${info.name}" type="hidden" value="${info.data?.size}"/>""")
                 if (info.data == null) to.append("null list")
                 else {
@@ -538,8 +586,9 @@ class HtmlConverter : Parser, Renderer {
                 }
             }
 
-            override fun parse(info: LevelInfo<Map<*, *>>): Map<*, *>? {
-                val count = info.context.httpRequest.parameter(info.name)?.toIntOrNull() ?: return null
+            override fun parseNonNull(info: LevelInfo<Map<*, *>>): Map<*, *>? {
+                val count = info.context.httpRequest.parameter(info.name)?.toIntOrNull()
+                        ?: return null
                 val result = LinkedHashMap<Any?, Any?>()
                 for (index in 0 until count) {
                     val subKey = LevelInfo(
@@ -568,7 +617,7 @@ class HtmlConverter : Parser, Renderer {
                 return result
             }
 
-            override fun renderParameters(info: LevelInfo<Map<*, *>>, to: MutableMap<String, String>) {
+            override fun renderParametersNonNull(info: LevelInfo<Map<*, *>>, to: MutableMap<String, String>) {
                 info.data?.let {
                     it.entries.forEachIndexed { index, (key, value) ->
                         val subKey = LevelInfo(
@@ -599,7 +648,7 @@ class HtmlConverter : Parser, Renderer {
 
         subGenerators += { pointerServerFunctionKClass ->
             if (!pointerServerFunctionKClass.fastAllSuperclasses.contains(PointerServerFunction::class)) null
-            else object : HtmlSubConverter<PointerServerFunction<*, *>> {
+            else object : HtmlSubConverterNullHandling<PointerServerFunction<*, *>> {
 
                 val psfk = pointerServerFunctionKClass.fastAllSupertypes
                         .find { it.jvmErasure == PointerServerFunction::class }!!
@@ -608,7 +657,7 @@ class HtmlConverter : Parser, Renderer {
                 val pointedSub = this@HtmlConverter.retrieveAny(pointedType.kclass)
                 val keySub = this@HtmlConverter.retrieveAny(keyType.kclass)
 
-                override fun render(info: LevelInfo<PointerServerFunction<*, *>>, to: Appendable) {
+                override fun renderNonNull(info: LevelInfo<PointerServerFunction<*, *>>, to: Appendable) {
                     if (info.data == null)
                         to.append("No Pointer")
                     else {
@@ -672,7 +721,7 @@ class HtmlConverter : Parser, Renderer {
 
                 }
 
-                override fun renderForm(info: LevelInfo<PointerServerFunction<*, *>>, to: Appendable) {
+                override fun renderFormNonNull(info: LevelInfo<PointerServerFunction<*, *>>, to: Appendable) {
                     val options = info.context.getTransaction.invoke().use {
                         pointedType.kclass.query()?.invoke(it)
                     } ?: listOf()
@@ -691,7 +740,7 @@ class HtmlConverter : Parser, Renderer {
                     to.append("</select>")
                 }
 
-                override fun parse(info: LevelInfo<PointerServerFunction<*, *>>): PointerServerFunction<*, *>? {
+                override fun parseNonNull(info: LevelInfo<PointerServerFunction<*, *>>): PointerServerFunction<*, *>? {
                     val stringValue = info.context.httpRequest.parameter(info.name)
                     @Suppress("IMPLICIT_CAST_TO_ANY")
                     val key = when (keyType.kclass) {
@@ -730,7 +779,7 @@ class HtmlConverter : Parser, Renderer {
                     }
                 }
 
-                override fun renderParameters(info: LevelInfo<PointerServerFunction<*, *>>, to: MutableMap<String, String>) {
+                override fun renderParametersNonNull(info: LevelInfo<PointerServerFunction<*, *>>, to: MutableMap<String, String>) {
                     keyToString(info.data?.id)?.let { to[info.name] = it }
                 }
             }
@@ -739,9 +788,9 @@ class HtmlConverter : Parser, Renderer {
         subGenerators += sub@{ kclass ->
             if (!kclass.allSuperclasses.contains(Exception::class) && kclass != Exception::class) return@sub null
             //Any!
-            return@sub object : HtmlSubConverter<Exception> {
+            return@sub object : HtmlSubConverterNullHandling<Exception> {
 
-                override fun render(info: LevelInfo<Exception>, to: Appendable) {
+                override fun renderNonNull(info: LevelInfo<Exception>, to: Appendable) {
                     to.append("<h1>${info.data?.javaClass?.simpleName}</h1>")
                     to.append("<p>")
                     to.append(info.data?.message)
@@ -753,14 +802,14 @@ class HtmlConverter : Parser, Renderer {
                     }
                 }
 
-                override fun renderForm(info: LevelInfo<Exception>, to: Appendable) {
+                override fun renderFormNonNull(info: LevelInfo<Exception>, to: Appendable) {
                 }
 
-                override fun parse(info: LevelInfo<Exception>): Exception? {
+                override fun parseNonNull(info: LevelInfo<Exception>): Exception? {
                     return null
                 }
 
-                override fun renderParameters(info: LevelInfo<Exception>, to: MutableMap<String, String>) {
+                override fun renderParametersNonNull(info: LevelInfo<Exception>, to: MutableMap<String, String>) {
                 }
 
             }
@@ -769,7 +818,7 @@ class HtmlConverter : Parser, Renderer {
 
     val defaultGenerator: (KClass<*>) -> HtmlSubConverter<*> = sub@{ kclass ->
         //Any!
-        return@sub object : HtmlSubConverter<Any> {
+        return@sub object : HtmlSubConverterNullHandling<Any> {
 
             val subPropertiesHidden = kclass.fastMutableProperties.values.filter { it.hidden }.map {
                 SubField(
@@ -784,7 +833,7 @@ class HtmlConverter : Parser, Renderer {
                 )
             }.toTypedArray()
 
-            override fun render(info: LevelInfo<Any>, to: Appendable) {
+            override fun renderNonNull(info: LevelInfo<Any>, to: Appendable) {
                 if (info.data is ServerFunction<*>) {
                     to.append("""<form method="post" action="#">""")
                     renderForm(info, to)
@@ -819,7 +868,7 @@ class HtmlConverter : Parser, Renderer {
                 }
             }
 
-            override fun renderForm(info: LevelInfo<Any>, to: Appendable) {
+            override fun renderFormNonNull(info: LevelInfo<Any>, to: Appendable) {
                 if (info.data == null) {
                     to.append("<p>null</p>")
                 } else {
@@ -863,7 +912,7 @@ class HtmlConverter : Parser, Renderer {
                 }
             }
 
-            override fun parse(info: LevelInfo<Any>): Any? {
+            override fun parseNonNull(info: LevelInfo<Any>): Any? {
                 val instance = info.type.kclass.createInstance()
                 for (prop in subProperties) {
                     try {
@@ -904,7 +953,7 @@ class HtmlConverter : Parser, Renderer {
                 return instance
             }
 
-            override fun renderParameters(info: LevelInfo<Any>, to: MutableMap<String, String>) {
+            override fun renderParametersNonNull(info: LevelInfo<Any>, to: MutableMap<String, String>) {
                 if (info.data == null) return
                 for (prop in subProperties) {
                     val value = prop.property.get(info.data)
