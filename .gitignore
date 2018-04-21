@@ -14,6 +14,8 @@
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
 
+/types-html/xodus/
+
 # Package Files #
 *.jar
 *.war

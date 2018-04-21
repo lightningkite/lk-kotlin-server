@@ -141,9 +141,9 @@ class ManualTest {
 
         HtmlConverter().apply {
             @Suppress("UNCHECKED_CAST")
-            val base = defaultGenerator.invoke(User::class) as HtmlConverter.HtmlSubConverter<User>
-            register(User::class, object : HtmlConverter.HtmlSubConverter<User> by base {
-                override fun render(info: HtmlConverter.LevelInfo<User>, to: Appendable) {
+            val base = defaultGenerator.invoke(User::class) as HtmlSubConverter<User>
+            register(User::class, object : HtmlSubConverter<User> by base {
+                override fun render(info: ItemConversionInfo<User>, to: Appendable) {
                     base.render(info, to)
                     HtmlConverter.setCookie(to, "user", info.data?.name ?: "None")
                 }
