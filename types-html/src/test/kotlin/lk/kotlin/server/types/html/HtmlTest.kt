@@ -10,6 +10,7 @@ import lk.kotlin.reflect.annotations.Password
 import lk.kotlin.reflect.jackson.useExternalClassRegistry
 import lk.kotlin.server.base.Context
 import lk.kotlin.server.base.ServerSettings
+import lk.kotlin.server.base.Transaction
 import lk.kotlin.server.base.respondHtml
 import lk.kotlin.server.jetty.asJettyHandler
 import lk.kotlin.server.types.TypedExceptionHttpRequestHandler
@@ -35,7 +36,7 @@ class ManualTest {
     @GetFromID(User.Get::class)
     @Query(User.Query::class)
     data class User(
-            @Hidden override var id: String = "",
+            override var id: String = "",
             var name: String = "",
             @Password var password: String = "",
             @EstimatedLength(5000) var bio: String = "",
@@ -95,11 +96,12 @@ class ManualTest {
     //Functionality
 
     fun setupFunctionality() {
-        User.Add::class.invocation = {
-            it.xodus.write(user).let { user }
+        User.Add::class.invocation = fun User.Add.(it: Transaction ):User{
+            it.xodus.write(user)
+            return user
         }
         User.Get::class.invocation = {
-            it.xodus.get<User>(id)
+            it.xodus.get<User>(this.id)
         }
         User.Query::class.invocation = {
             it.xodus.getAll<User>()
@@ -187,7 +189,7 @@ class ManualTest {
                     ResourceHandler().apply {
                         isDirectoriesListed = true
                         welcomeFiles = arrayOf("index.html")
-                        resourceBase = "C:\\Public"
+                        resourceBase = "/mnt/BEF43A5FF43A19DB/Brady/Exit"
                     }
             )
             start()

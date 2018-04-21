@@ -1,5 +1,6 @@
 package lk.kotlin.server.types
 
+import lk.kotlin.jvm.utils.stream.toByteArray
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.util.*
@@ -17,5 +18,5 @@ fun String.deflate64(): String = Base64.getUrlEncoder().encodeToString(
 )
 
 fun String.inflate64(): String = Base64.getUrlDecoder().decode(this).let {
-    GZIPInputStream(ByteArrayInputStream(it)).readAllBytes().toString(Charsets.UTF_8)
+    GZIPInputStream(ByteArrayInputStream(it)).toByteArray().toString(Charsets.UTF_8)
 }
