@@ -6,6 +6,7 @@ import lk.kotlin.jackson.jacksonToNode
 import lk.kotlin.jackson.jacksonToString
 import lk.kotlin.reflect.TypeInformation
 import lk.kotlin.reflect.annotations.friendlyName
+import lk.kotlin.reflect.classedName
 import lk.kotlin.reflect.fastMutableProperties
 import lk.kotlin.reflect.typeInformation
 import lk.kotlin.server.base.*
@@ -57,6 +58,10 @@ fun HttpRequestHandlerBuilder.rpc(
         }
     }
     get("$url/index") {
+        val user = getUser(this)
+        if(user == null){
+
+        }
         respondHtml {
             append("<!DOCTYPE html>")
             append("<html>")
@@ -65,13 +70,25 @@ fun HttpRequestHandlerBuilder.rpc(
             append("<link rel=\"stylesheet\" href=\"/style.css\"/>")
             append("</head>")
             append("<body>")
-            append("<h1>Available Functions</h1>")
+            append("<h1>Welcome!</h1>")
             append("<p>You are logged in as: ${getUser(this@get)}</p>")
-            append("<ul>")
-            for (it in functionList) {
-                append("<li><a href=\"${it.kclass.urlName()}\">${it.kclass.friendlyName}</a></li>")
+            append("<div class = \'flexClass\'>")
+            val groupedFunctions: Map<String?, List<TypeInformation>> = functionList.groupBy {
+                it.kclass.friendlyName
+                        .substringBeforeLast(" -","- Misc")
             }
-            append("</ul>")
+            for((groupName, functions) in groupedFunctions){
+                append("<div class = \'section\'>")
+                append("<h2 style = \'text-align: center;\'>${groupName}s</h2>")
+                append("<ul>")
+
+                for(func in functions){
+                    append("<li><a href=\"${func.kclass.urlName()}\">${func.kclass.simpleName}</a></li>")
+                }
+                append("</ul>")
+                append("</div>")
+            }
+            append("</div>")
             append("</body>")
             append("</html>")
         }

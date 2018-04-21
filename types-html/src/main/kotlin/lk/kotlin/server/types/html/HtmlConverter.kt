@@ -19,8 +19,8 @@ class HtmlConverter : Parser, Renderer {
         CentralContentTypeMap.renderers[ContentType.Text.Html.parameterless()] = this
     }
 
-    var pageWrapperPrepend = """<!DOCTYPE html><html><head><meta charset="utf-8"/><link rel="stylesheet" href="/style.css"/></head><body>"""
-    var pageWrapperAppend = """</body></html>"""
+    var pageWrapperPrepend = """<!DOCTYPE html><html><head><meta charset="utf-8"/><link rel="stylesheet" href="/style.css"/></head><body class = "flexClass"><article class = "section info">"""
+    var pageWrapperAppend = """<p style = "margin-top: 20px;"><a href = "index" >Go Home</a></p></article></body></html>"""
 
     private val subGenerators = ArrayList<(KClass<*>) -> HtmlSubConverter<*>?>()
     private val subs = HashMap<KClass<*>, HtmlSubConverter<*>>()
