@@ -8,11 +8,9 @@ import lk.kotlin.reflect.annotations.EstimatedLength
 import lk.kotlin.reflect.annotations.Hidden
 import lk.kotlin.reflect.annotations.Password
 import lk.kotlin.reflect.jackson.useExternalClassRegistry
-import lk.kotlin.server.base.Context
-import lk.kotlin.server.base.ServerSettings
-import lk.kotlin.server.base.Transaction
-import lk.kotlin.server.base.respondHtml
+import lk.kotlin.server.base.*
 import lk.kotlin.server.jetty.asJettyHandler
+import lk.kotlin.server.types.CentralContentTypeMap
 import lk.kotlin.server.types.TypedExceptionHttpRequestHandler
 import lk.kotlin.server.types.common.PointerServerFunction
 import lk.kotlin.server.types.common.ServerFunction
@@ -22,6 +20,7 @@ import lk.kotlin.server.types.invocation
 import lk.kotlin.server.types.log.SimpleServerFunctionLogger
 import lk.kotlin.server.types.rpc
 import lk.kotlin.server.xodus.*
+import lk.kotlin.types.csv.CsvConverter
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.HandlerCollection
 import org.eclipse.jetty.server.handler.ResourceHandler
@@ -152,6 +151,7 @@ class ManualTest {
             })
             setup()
         }
+        CentralContentTypeMap.renderers[ContentType.Text.Csv.parameterless()] = CsvConverter()
 
         setupFunctionality()
         val functions = listOf(

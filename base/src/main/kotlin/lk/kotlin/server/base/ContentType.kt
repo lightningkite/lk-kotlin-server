@@ -36,6 +36,7 @@ data class ContentType(
         val Plain = ContentType("text", "plain")
         val Html = ContentType("text", "html")
         val Css = ContentType("text", "css")
+        val Csv = ContentType("text", "csv")
     }
 
     object Image {

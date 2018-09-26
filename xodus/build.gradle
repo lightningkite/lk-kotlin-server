@@ -25,7 +25,6 @@ dependencies {
     testImplementation "org.jetbrains.kotlin:kotlin-test-junit:${rootProject.kotlinVersion}"
 
     implementation "com.lightningkite.kotlin:utils:${rootProject.libraryVersion}"
-    implementation "com.lightningkite.kotlin:jvm-utils:${rootProject.libraryVersion}"
     implementation "com.lightningkite.kotlin:jackson:${rootProject.libraryVersion}"
     implementation "com.lightningkite.kotlin:reflect:${rootProject.libraryVersion}"
 

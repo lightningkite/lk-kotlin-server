@@ -1,3 +1,4 @@
+include ':types-csv'
 rootProject.name = 'lk-kotlin-server'
 include 'lk-kotlin-server-base'
 include 'types-common'

@@ -18,12 +18,14 @@ class TypedExceptionHttpRequestHandler() : HttpRequestHandler() {
         try {
             callback.invoke(request)
         } catch (e: TypedException) {
+            e.printStackTrace()
             request.respondWith(
                     code = e.code,
                     typeInformation = e.type,
                     output = e.data
             )
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
+            e.printStackTrace()
             val code = when(e){
                 is IllegalArgumentException -> 400
                 is IllegalAccessException -> 403

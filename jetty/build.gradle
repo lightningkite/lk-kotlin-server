@@ -25,11 +25,10 @@ dependencies {
     testImplementation "org.jetbrains.kotlin:kotlin-test-junit:${rootProject.kotlinVersion}"
 
     implementation "com.lightningkite.kotlin:utils:${rootProject.libraryVersion}"
-    implementation "com.lightningkite.kotlin:jvm-utils:${rootProject.libraryVersion}"
 
     implementation project(':base')
-
-    compile 'org.eclipse.jetty:jetty-server:9.4.9.v20180320'
+// https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-server
+    implementation 'org.eclipse.jetty:jetty-server:9.4.12.v20180830'
 }
 
 

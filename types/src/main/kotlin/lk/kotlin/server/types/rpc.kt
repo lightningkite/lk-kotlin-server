@@ -28,24 +28,24 @@ fun HttpRequestHandlerBuilder.rpc(
         val funcUrl = url + "/" + functionType.kclass.urlName()
         println("funcUrl $funcUrl")
 
-        if (functionType.kclass.fastMutableProperties.isEmpty()) {
-            get(funcUrl) {
-                val user = getUser(this)
-                val request = inputAs<ServerFunction<*>>(context = context, user = user, typeInformation = functionType)
-                val result = Transaction(context, user).use {
-                    request.invoke(it)
-                }
-                logger?.log(HistoricalServerFunction(userIdentifier = user, call = request, result = result))
-                @Suppress("UNCHECKED_CAST")
-                respondWith(context = context, user = user, typeInformation = (functionType.kclass as KClass<out ServerFunction<*>>).returnType, output = result)
-            }
-        } else {
+//        if (functionType.kclass.fastMutableProperties.isEmpty()) {
+//            get(funcUrl) {
+//                val user = getUser(this)
+//                val request = inputAs<ServerFunction<*>>(context = context, user = user, typeInformation = functionType)
+//                val result = Transaction(context, user).use {
+//                    request.invoke(it)
+//                }
+//                logger?.log(HistoricalServerFunction(userIdentifier = user, call = request, result = result))
+//                @Suppress("UNCHECKED_CAST")
+//                respondWith(context = context, user = user, typeInformation = (functionType.kclass as KClass<out ServerFunction<*>>).returnType, output = result)
+//            }
+//        } else {
             get(funcUrl) {
                 val user = getUser(this)
                 val request = inputAs<ServerFunction<*>>(context = context, user = user, typeInformation = functionType)
                 respondWith(context = context, user = user, typeInformation = functionType, output = request)
             }
-        }
+//        }
         post(funcUrl) {
             val user = getUser(this)
             val request = inputAs<ServerFunction<*>>(context = context, user = user, typeInformation = functionType)

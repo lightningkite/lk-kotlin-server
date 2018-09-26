@@ -6,6 +6,7 @@ import lk.kotlin.reflect.TypeInformation
 import lk.kotlin.server.base.HttpRequest
 import lk.kotlin.server.base.Transaction
 import java.io.OutputStream
+import java.lang.IllegalArgumentException
 
 class JacksonConverter(val mapper: ObjectMapper = MyJackson.mapper) : Renderer, Parser {
 
@@ -14,8 +15,11 @@ class JacksonConverter(val mapper: ObjectMapper = MyJackson.mapper) : Renderer, 
     }
 
     override fun <T> parse(type: TypeInformation, httpRequest: HttpRequest, getTransaction: () -> Transaction): T {
-        return httpRequest.input.use {
-            mapper.readValue<T>(it, type.toJavaType())
+        val inputString = httpRequest.input.use { it.reader().readText() }
+        return try {
+            mapper.readValue<T>(inputString, type.toJavaType())
+        } catch (e: Exception) {
+            throw IllegalArgumentException("Failed to parse input $inputString", e)
         }
     }
 }

@@ -4,7 +4,9 @@ import lk.kotlin.reflect.annotations.friendlyName
 import lk.kotlin.reflect.annotations.hidden
 import lk.kotlin.reflect.fastMutableProperties
 import lk.kotlin.reflect.fastType
+import lk.kotlin.reflect.nameify
 import lk.kotlin.reflect.setUntyped
+import lk.kotlin.server.base.ContentType
 import lk.kotlin.server.types.common.ServerFunction
 import lk.kotlin.server.types.urlName
 import java.util.HashMap
@@ -32,6 +34,23 @@ fun DefaultGenerator(htmlConverter: HtmlConverter):HtmlSubConverterGenerator = s
             if (info.data is ServerFunction<*>) {
                 to.append("""<form method="post" action="#">""")
                 renderForm(info, to)
+
+                to.append("<select name=\"x-override-accept\">")
+                listOf(
+                        ContentType.Text.Html,
+                        ContentType.Text.Csv,
+                        ContentType.Application.Json
+                ).forEach{
+                    to.append("<option ")
+                    if (it == ContentType.Text.Html) {
+                        to.append("selected=\"selected\" ")
+                    }
+                    to.append("value=\"$it\">")
+                    to.append(it.toString())
+                    to.append("</option>")
+                }
+                to.append("</select>")
+
                 to.append("""<input class="submit" type="submit" value="Submit"/>""")
                 to.append("""</form>""")
                 return

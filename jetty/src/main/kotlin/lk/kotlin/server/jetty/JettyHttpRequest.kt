@@ -6,6 +6,9 @@ import lk.kotlin.server.base.HttpRequest
 import org.eclipse.jetty.server.Request
 import java.io.InputStream
 import java.io.OutputStream
+import java.lang.Exception
+import java.lang.IllegalStateException
+import java.util.*
 import javax.servlet.http.Cookie
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
@@ -16,6 +19,7 @@ class JettyHttpRequest(
         var request: HttpServletRequest,
         var response: HttpServletResponse
 ) : HttpRequest {
+
     override val path: String = path.let {
         if (it.startsWith('/'))
             it.drop(1)

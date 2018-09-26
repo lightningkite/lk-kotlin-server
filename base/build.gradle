@@ -24,7 +24,6 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     testImplementation "org.jetbrains.kotlin:kotlin-test-junit:${rootProject.kotlinVersion}"
     implementation "com.lightningkite.kotlin:utils:${rootProject.libraryVersion}"
-    implementation "com.lightningkite.kotlin:jvm-utils:${rootProject.libraryVersion}"
 }
 
 

@@ -3,16 +3,21 @@ package lk.kotlin.server.types
 import lk.kotlin.reflect.TypeInformation
 import lk.kotlin.reflect.typeInformation
 import lk.kotlin.server.base.*
+import java.lang.Exception
+import java.lang.IllegalStateException
+import java.util.*
 
 inline fun <reified T : Any> HttpRequest.inputAs(context: Context = mutableMapOf(), user: Any? = null): T = inputAs(context, user, typeInformation<T>())
-fun <T> HttpRequest.inputAs(context: Context = mutableMapOf(), user: Any? = null, typeInformation: TypeInformation): T {
-    val contentType = contentType()?.parameterless() ?: ContentType.Application.FormUrlEncoded.parameterless()
-    val parser = CentralContentTypeMap.parsers[contentType]
-            ?: throw IllegalArgumentException("Content type ${contentType()} not understood.")
-    return parser.parse(
-            type = typeInformation,
-            httpRequest = this,
-            getTransaction = { Transaction(context, user) }
+fun <T> HttpRequest.inputAs(
+        context: Context = mutableMapOf(),
+        user: Any? = null,
+        typeInformation: TypeInformation
+): T {
+    return CentralContentTypeMap.parse(
+            request = this,
+            context = context,
+            user = user,
+            typeInformation = typeInformation
     )
 }
 
@@ -58,23 +63,13 @@ fun <T> HttpRequest.respondWith(
         addCookies: List<HttpCookie> = listOf(),
         typeInformation: TypeInformation,
         output: T
-) {
-    val rendererType = this.accepts().firstOrNull {
-        CentralContentTypeMap.renderers.containsKey(it.parameterless())
-    } ?: ContentType.Application.Json
-    respond(
-            code = code,
-            headers = headers,
-            addCookies = addCookies,
-            contentType = rendererType,
-            output = {
-                CentralContentTypeMap.renderers[rendererType.parameterless()]!!.render(
-                        type = typeInformation,
-                        data = output,
-                        httpRequest = this,
-                        out = it,
-                        getTransaction = { Transaction(context, user) }
-                )
-            }
-    )
-}
+) = CentralContentTypeMap.render(
+        request = this,
+        context = context,
+        user = user,
+        code = code,
+        headers = headers,
+        addCookies = addCookies,
+        typeInformation = typeInformation,
+        output = output
+)
